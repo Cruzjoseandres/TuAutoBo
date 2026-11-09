@@ -38,11 +38,11 @@ jobs:
           cd frontend
           npm run build
 
-      - name: 5. Configurar JDK 17 (Java)
+      - name: 5. Configurar JDK 21 (Java Requerido por Capacitor 7)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: 6. Configurar Gradle Oficial
         uses: gradle/actions/setup-gradle@v4
