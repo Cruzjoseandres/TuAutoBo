@@ -44,32 +44,35 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: 6. Configurar Gradle Oficial
+      - name: 6. Configurar Android SDK y Licencias
+        uses: android-actions/setup-android@v4
+
+      - name: 7. Configurar Gradle Oficial
         uses: gradle/actions/setup-gradle@v4
 
-      - name: 7. Copiar Assets Compilados de Angular a Android
+      - name: 8. Copiar Assets Compilados de Angular a Android
         run: |
           mkdir -p frontend/android/app/src/main/assets/public
           cp -r frontend/dist/frontend/browser/* frontend/android/app/src/main/assets/public/
 
-      - name: 8. Compilar APK con Gradle
+      - name: 9. Compilar APK con Gradle
         run: |
           cd frontend/android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleDebug --no-daemon
 
-      - name: 9. Preparar Archivo TuAuto.apk
+      - name: 10. Preparar Archivo TuAuto.apk
         run: |
           cp frontend/android/app/build/outputs/apk/debug/app-debug.apk ./TuAuto.apk
 
-      - name: 10. Subir Artefacto a GitHub Actions
+      - name: 11. Subir Artefacto a GitHub Actions
         uses: actions/upload-artifact@v4
         with:
           name: TuAuto-Android-APK
           path: TuAuto.apk
           retention-days: 14
 
-      - name: 11. Publicar / Actualizar Release "latest" en GitHub
+      - name: 12. Publicar / Actualizar Release "latest" en GitHub
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
