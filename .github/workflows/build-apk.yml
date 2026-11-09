@@ -47,17 +47,16 @@ jobs:
       - name: 6. Configurar Gradle Oficial
         uses: gradle/actions/setup-gradle@v4
 
-      - name: 7. Aceptar Licencias y Sincronizar Assets a Android
+      - name: 7. Copiar Assets Compilados de Angular a Android
         run: |
-          yes | sdkmanager --licenses || true
-          cd frontend
-          npm run cap -- copy android
+          mkdir -p frontend/android/app/src/main/assets/public
+          cp -r frontend/dist/frontend/browser/* frontend/android/app/src/main/assets/public/
 
       - name: 8. Compilar APK con Gradle
         run: |
           cd frontend/android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --no-daemon
 
       - name: 9. Preparar Archivo TuAuto.apk
         run: |
