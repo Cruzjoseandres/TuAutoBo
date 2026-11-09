@@ -41,12 +41,11 @@ jobs:
       - name: 5. Configurar JDK 17 (Java)
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
-      - name: 6. Configurar Android SDK
-        uses: android-actions/setup-android@v3
+      - name: 6. Configurar Gradle Oficial
+        uses: gradle/actions/setup-gradle@v4
 
       - name: 7. Sincronizar Capacitor con Proyecto Android
         run: |
@@ -57,7 +56,7 @@ jobs:
         run: |
           cd frontend/android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --stacktrace
 
       - name: 9. Preparar Archivo TuAuto.apk
         run: |
@@ -78,7 +77,7 @@ jobs:
           body: |
             ## 🚗 TuAuto Bolivia — Aplicación Oficial para Android
             
-            Este archivo APK se compila automáticamente cada vez que se realiza una mejora o actualización en la aplicación.
+            Este archivo APK se compila automáticamente en cada actualización de la plataforma.
 
             ### 📲 Instrucciones de Instalación:
             1. Descarga el archivo **`TuAuto.apk`** que aparece abajo en los Assets.

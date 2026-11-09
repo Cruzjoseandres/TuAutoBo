@@ -19,3 +19,4 @@ export class DescargarAppComponent {
     window.open(this.urlApk, '_blank');
   }
 }
+
