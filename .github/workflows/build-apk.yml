@@ -46,6 +46,8 @@ jobs:
 
       - name: 6. Configurar Android SDK y Licencias
         uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
       - name: 7. Configurar Gradle Oficial
         uses: gradle/actions/setup-gradle@v4
@@ -59,7 +61,7 @@ jobs:
         run: |
           cd frontend/android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: 10. Preparar Archivo TuAuto.apk
         run: |
