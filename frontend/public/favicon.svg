@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0F19"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0071E3"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0071E3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle Base iOS Style -->
+  <rect width="128" height="128" rx="28" fill="url(#bgGrad)"/>
+  <rect width="126" height="126" x="1" y="1" rx="27" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+
+  <!-- Sleek Automotive Hood & Windshield -->
+  <path d="M38 48 C42 34, 86 34, 90 48 L100 66 L28 66 Z" fill="url(#accentGrad)" opacity="0.3"/>
+  <path d="M43 49 C46 38, 82 38, 85 49 L94 65 L34 65 Z" fill="#0B0F19"/>
+
+  <!-- Bold Sports Car Body (High contrast for 16x16 tabs) -->
+  <path d="M20 72 C20 66, 26 64, 34 64 L94 64 C102 64, 108 66, 108 72 L112 84 C113 90, 109 94, 102 94 L26 94 C19 94, 15 90, 16 84 Z" fill="url(#accentGrad)"/>
+
+  <!-- Front Windshield Cutout / Cabin Shadow -->
+  <path d="M45 52 L83 52 L89 63 L39 63 Z" fill="#020617"/>
+
+  <!-- Dynamic Air Grille -->
+  <rect x="42" y="78" width="44" height="10" rx="3" fill="#0B0F19"/>
+  <line x1="48" y1="83" x2="80" y2="83" stroke="#38BDF8" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- High-Intensity LED Headlights -->
+  <polygon points="24,71 38,73 35,78 22,76" fill="#FFFFFF"/>
+  <polygon points="104,71 90,73 93,78 106,76" fill="#FFFFFF"/>
+
+  <!-- Tires with Ground Stance -->
+  <rect x="18" y="84" width="8" height="14" rx="3" fill="#020617" stroke="#38BDF8" stroke-width="1.5"/>
+  <rect x="102" y="84" width="8" height="14" rx="3" fill="#020617" stroke="#38BDF8" stroke-width="1.5"/>
+
+  <!-- Lightning Bolt Badge (Instant Delivery & Power) -->
+  <polygon points="66,24 57,37 63,37 60,46 71,33 65,33" fill="#FACC15"/>
+
+  <!-- Underbody Glow -->
+  <ellipse cx="64" cy="99" rx="32" ry="3.5" fill="#38BDF8" opacity="0.75"/>
+</svg>
