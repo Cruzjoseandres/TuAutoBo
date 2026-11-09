@@ -1,0 +1,721 @@
+<div class="space-y-6 pb-10">
+
+  <!-- Barra Superior de Navegación y Divisa -->
+  <div class="flex flex-wrap items-center justify-between gap-3 apple-card rounded-2xl p-3 shadow-sm">
+    <div class="flex items-center space-x-2 text-xs">
+      <a
+        routerLink="/comprador"
+        class="active:scale-[0.97] transition-all inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-white/[0.08] hover:bg-neutral-200/70 dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 font-semibold">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        <span>Volver al Catálogo</span>
+      </a>
+      <span class="text-neutral-300 dark:text-neutral-500">/</span>
+      <span class="text-neutral-500 dark:text-neutral-400">{{ repuesto()?.categoria?.nombre || 'Repuestos' }}</span>
+      <span class="text-neutral-300 dark:text-neutral-500">/</span>
+      <span class="font-semibold text-neutral-900 dark:text-white line-clamp-1 max-w-xs">{{ repuesto()?.titulo }}</span>
+    </div>
+
+    <!-- Toggle BOB / USD -->
+    <button
+      (click)="moneda.set(moneda() === 'BOB' ? 'USD' : 'BOB')"
+      class="active:scale-[0.97] transition-all px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-white/[0.08] hover:bg-neutral-200/70 dark:hover:bg-white/[0.12] text-xs font-semibold text-neutral-800 dark:text-neutral-200 border border-black/[0.04] dark:border-white/[0.08]">
+      <span [class.text-[#0071E3]]="moneda() === 'BOB'" [class.font-bold]="moneda() === 'BOB'">BOB</span>
+      <span class="text-neutral-400 mx-1">/</span>
+      <span [class.text-[#0071E3]]="moneda() === 'USD'" [class.font-bold]="moneda() === 'USD'">USD</span>
+      <span class="text-[10px] text-neutral-400 ml-1">($1 = Bs {{ tasaDolar() }})</span>
+    </button>
+  </div>
+
+  @if (repuesto(); as rep) {
+
+    <!-- SECCIÓN PRINCIPAL: DETALLE DEL REPUESTO + FICHA PEDIDOSYA + CAJA DE PAGO -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- COLUMNA IZQUIERDA: IMAGEN Y FICHA TÉCNICA (7 COLUMNAS) -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- Tarjeta de Galería y Especificaciones -->
+        <div class="apple-card rounded-3xl p-6 shadow-sm space-y-5">
+          <div class="relative w-full h-80 sm:h-96 rounded-2xl overflow-hidden bg-neutral-100 border border-neutral-200/60">
+            <img
+              [src]="rep.url_imagen"
+              (error)="$any($event.target).src = 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=800&auto=format&fit=crop&q=80'"
+              class="w-full h-full object-cover"
+            />
+
+            <!-- Badges flotantes superiores -->
+            <div class="absolute top-3.5 left-3.5 flex flex-wrap gap-2">
+              @if (rep.es_destacado) {
+                <span class="px-3 py-1 rounded-full bg-amber-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center space-x-1">
+                  <svg class="w-3 h-3 fill-white" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span>Destacado en Santa Cruz</span>
+                </span>
+              }
+              <span class="px-3 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[10px] font-semibold uppercase tracking-wider">
+                {{ rep.condicion === 'NUEVO_ORIGINAL_OEM' ? 'Nuevo Original OEM' : 'Alternativo Certificado' }}
+              </span>
+            </div>
+
+            <div class="absolute top-3.5 right-3.5 px-3 py-1 rounded-full bg-emerald-600/95 backdrop-blur-md text-white text-xs font-bold shadow-sm flex items-center space-x-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+              <span>Disponible en Tienda</span>
+            </div>
+          </div>
+
+          <!-- Título y Descripción Técnica -->
+          <div class="space-y-3">
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+              <span class="px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-[#0071E3] font-semibold border border-blue-100 dark:border-blue-900/40">
+                {{ rep.categoria?.nombre }}
+              </span>
+              <span class="px-2.5 py-0.5 rounded-md bg-neutral-100 dark:bg-white/[0.08] text-neutral-700 dark:text-neutral-300 font-semibold">
+                Fabricante: {{ rep.fabricante?.nombre || 'No especificado' }}
+              </span>
+              @if (promedioCalificacion() !== null && resenas().length > 0) {
+                <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-semibold border border-amber-200/60 dark:border-amber-800/40">
+                  <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span>{{ promedioCalificacion() }} ({{ resenas().length }} reseñas)</span>
+                </span>
+              } @else {
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-neutral-100 dark:bg-white/[0.08] text-neutral-600 dark:text-neutral-400 font-medium">
+                  <span>Sin reseñas aún</span>
+                </span>
+              }
+            </div>
+
+            <h1 class="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white leading-snug">
+              {{ rep.titulo }}
+            </h1>
+
+            <p class="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
+              {{ rep.descripcion }}
+            </p>
+          </div>
+
+          <!-- Grilla de Especificaciones Técnicas y Logísticas -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+            <div class="p-3 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08]">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">Código SKU</span>
+              <span class="text-xs font-bold font-mono text-neutral-900 dark:text-white">{{ rep.sku }}</span>
+            </div>
+            <div class="p-3 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08]">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">Número OEM</span>
+              <span class="text-xs font-bold font-mono text-[#0071E3]">{{ rep.numero_oem || 'Estándar OEM' }}</span>
+            </div>
+            <div class="p-3 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08]">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">Peso & Bulto</span>
+              <span class="text-xs font-bold text-neutral-900 dark:text-white">{{ rep.peso_kg }} kg • {{ rep.tamano }}</span>
+            </div>
+            <div class="p-3 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08]">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">Garantía Escrita</span>
+              <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">{{ rep.meses_garantia ? rep.meses_garantia + ' Meses' : 'Sin garantía escrita' }}</span>
+            </div>
+          </div>
+
+          <!-- Compatibilidad Vehicular -->
+          @if (rep.vehiculo; as v) {
+            <div class="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/70 dark:border-blue-900/40 flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-[#0071E3] text-white flex items-center justify-center">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071E3] block">Compatibilidad Directa Verificada</span>
+                  <div class="text-xs font-bold text-neutral-900 dark:text-white">
+                    {{ v.modelo?.marca?.nombre }} {{ v.modelo?.nombre }} ({{ v.anio }}) • Motor {{ v.motor }}
+                  </div>
+                </div>
+              </div>
+              <span class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/50 px-2.5 py-1 rounded-lg">
+                Calce 100% Exacto
+              </span>
+            </div>
+          }
+
+
+        </div>
+
+        <!-- NAVEGACIÓN DE PESTAÑAS DE INFORMACIÓN GENERAL (EMPRESA / UBICACIÓN / RESEÑAS / CHAT) -->
+        <div class="apple-card rounded-3xl p-6 shadow-sm space-y-5">
+          <div class="flex flex-wrap gap-1.5 p-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.02] dark:border-white/[0.04]">
+            <button
+              (click)="tabDetalle.set('empresa')"
+              [class.bg-white]="tabDetalle() === 'empresa'"
+              [class.text-neutral-900]="tabDetalle() === 'empresa'"
+              [class.dark:bg-white]="tabDetalle() === 'empresa'"
+              [class.dark:text-neutral-900]="tabDetalle() === 'empresa'"
+              [class.shadow-sm]="tabDetalle() === 'empresa'"
+              [class.text-neutral-500]="tabDetalle() !== 'empresa'"
+              [class.dark:text-neutral-400]="tabDetalle() !== 'empresa'"
+              class="active:scale-[0.98] transition-all flex-1 py-2 px-3 rounded-lg text-xs font-semibold text-center">
+              Tienda Vendedora
+            </button>
+
+            <button
+              (click)="tabDetalle.set('talleres')"
+              [class.bg-white]="tabDetalle() === 'talleres'"
+              [class.text-neutral-900]="tabDetalle() === 'talleres'"
+              [class.dark:bg-white]="tabDetalle() === 'talleres'"
+              [class.dark:text-neutral-900]="tabDetalle() === 'talleres'"
+              [class.shadow-sm]="tabDetalle() === 'talleres'"
+              [class.text-neutral-500]="tabDetalle() !== 'talleres'"
+              [class.dark:text-neutral-400]="tabDetalle() !== 'talleres'"
+              class="active:scale-[0.98] transition-all flex-1 py-2 px-3 rounded-lg text-xs font-semibold text-center flex items-center justify-center space-x-1">
+              <span>Talleres de Instalación</span>
+              <span class="px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-[#0071E3] text-[10px] font-bold">{{ talleresInstalacion().length }}</span>
+            </button>
+
+            <button
+              (click)="tabDetalle.set('resenas')"
+              [class.bg-white]="tabDetalle() === 'resenas'"
+              [class.text-neutral-900]="tabDetalle() === 'resenas'"
+              [class.dark:bg-white]="tabDetalle() === 'resenas'"
+              [class.dark:text-neutral-900]="tabDetalle() === 'resenas'"
+              [class.shadow-sm]="tabDetalle() === 'resenas'"
+              [class.text-neutral-500]="tabDetalle() !== 'resenas'"
+              [class.dark:text-neutral-400]="tabDetalle() !== 'resenas'"
+              class="active:scale-[0.98] transition-all flex-1 py-2 px-3 rounded-lg text-xs font-semibold text-center">
+              Calificaciones ({{ resenas().length }})
+            </button>
+
+            <button
+              (click)="tabDetalle.set('chat')"
+              [class.bg-white]="tabDetalle() === 'chat'"
+              [class.text-neutral-900]="tabDetalle() === 'chat'"
+              [class.dark:bg-white]="tabDetalle() === 'chat'"
+              [class.dark:text-neutral-900]="tabDetalle() === 'chat'"
+              [class.shadow-sm]="tabDetalle() === 'chat'"
+              [class.text-neutral-500]="tabDetalle() !== 'chat'"
+              [class.dark:text-neutral-400]="tabDetalle() !== 'chat'"
+              class="active:scale-[0.98] transition-all flex-1 py-2 px-3 rounded-lg text-xs font-semibold text-center">
+              Chat Técnico Pre-Compra
+            </button>
+
+            <button
+              (click)="tabDetalle.set('comparador')"
+              [class.bg-white]="tabDetalle() === 'comparador'"
+              [class.text-neutral-900]="tabDetalle() === 'comparador'"
+              [class.dark:bg-white]="tabDetalle() === 'comparador'"
+              [class.dark:text-neutral-900]="tabDetalle() === 'comparador'"
+              [class.shadow-sm]="tabDetalle() === 'comparador'"
+              [class.text-neutral-500]="tabDetalle() !== 'comparador'"
+              [class.dark:text-neutral-400]="tabDetalle() !== 'comparador'"
+              class="active:scale-[0.98] transition-all flex-1 py-2 px-3 rounded-lg text-xs font-semibold text-center">
+              Otras Tiendas ({{ tiendasComparativas().length }})
+            </button>
+          </div>
+
+          <!-- PESTAÑA 1: INFORMACIÓN DE LA EMPRESA Y UBICACIÓN EN SANTA CRUZ (ESTILO PEDIDOSYA) -->
+          @if (tabDetalle() === 'empresa') {
+            <div class="space-y-4">
+              <div class="flex flex-wrap items-start justify-between gap-4 p-4 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08]">
+                <div class="flex items-start space-x-3.5">
+                  <div class="w-12 h-12 rounded-2xl bg-black dark:bg-white/10 text-white flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.651V9.35m0 0a3.001 3.001 0 003.75-.614A2.996 2.996 0 009.75 9.35c.82 0 1.58-.33 2.14-.863a3.002 3.002 0 004.22 0c.56.533 1.32.863 2.14.863a2.996 2.996 0 002.36-.614 3.001 3.001 0 003.75.614M3.75 9.35V4.875c0-.621.504-1.125 1.125-1.125h14.25c.621 0 1.125.504 1.125 1.125v4.474" />
+                    </svg>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                      <h3 class="text-base font-bold text-neutral-900 dark:text-white">{{ rep.tienda?.nombre }}</h3>
+                      <span class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 text-[10px] font-bold">
+                        Tienda Verificada
+                      </span>
+                    </div>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                      {{ rep.tienda?.especialidad || 'Importadora directa de repuestos japoneses y multimarcas en Santa Cruz' }}
+                    </p>
+                    <div class="flex flex-wrap items-center gap-3 text-[11px] text-neutral-600 dark:text-neutral-300 pt-1">
+                      <span>NIT: <strong class="font-mono text-neutral-900 dark:text-white">{{ rep.tienda?.nit || '1029485012' }}</strong></span>
+                      <span>•</span>
+                      <span>Horario: <strong class="text-neutral-900 dark:text-white">{{ rep.tienda?.horario_atencion || 'Lun a Sáb: 08:00 - 19:00' }}</strong></span>
+                      <span>•</span>
+                      <span>Tel: <strong class="text-neutral-900 dark:text-white">{{ rep.tienda?.telefono }}</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="text-right">
+                  <div class="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-400 font-bold text-sm">
+                    <svg class="w-4 h-4 fill-amber-400" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <span>{{ rep.tienda?.calificacion }} / 5.0</span>
+                  </div>
+                  <span class="text-[10px] text-neutral-500 dark:text-neutral-300 block mt-1">Reputación en entregas</span>
+                </div>
+              </div>
+
+              <!-- Ubicación Física y Mapa de Referencia en Santa Cruz -->
+              <div class="p-4 rounded-2xl bg-neutral-900 text-white space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="space-y-0.5">
+                    <span class="text-[10px] uppercase tracking-wider text-neutral-400 font-bold block">Ubicación del Local en Santa Cruz de la Sierra</span>
+                    <div class="text-sm font-bold flex items-center space-x-1.5">
+                      <svg class="w-4 h-4 text-[#0071E3] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                      </svg>
+                      <span>{{ rep.tienda?.direccion_escrita }}</span>
+                    </div>
+                    <p class="text-xs text-neutral-400">
+                      Referencia: {{ rep.tienda?.referencia || 'Zona Comercial Automotriz 2do Anillo' }}
+                    </p>
+                  </div>
+
+                  <a
+                    [href]="'https://www.google.com/maps/search/?api=1&query=' + (rep.tienda?.latitud || -17.7765) + ',' + (rep.tienda?.longitud || -63.1812)"
+                    target="_blank"
+                    rel="noopener"
+                    class="active:scale-[0.97] transition-all px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center space-x-1.5">
+                    <span>Ver en Google Maps</span>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                  </a>
+                </div>
+
+                <!-- Radar Logístico PedidosYa en Santa Cruz -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-white/10 text-xs">
+                  <div class="p-2.5 rounded-xl bg-white/5">
+                    <span class="text-[10px] text-neutral-400 block font-medium">Preparación de Paquete</span>
+                    <span class="font-bold text-white">{{ rep.tiempo_entrega_horas ? (rep.tiempo_entrega_horas + ' hora(s)') : ((rep.tienda?.tiempo_preparacion_min || 20) + ' min') }}</span>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white/5">
+                    <span class="text-[10px] text-neutral-400 block font-medium">Despacho Express</span>
+                    <span class="font-bold text-emerald-400">Moto / Torito / Camioneta</span>
+                  </div>
+                  <div class="p-2.5 rounded-xl bg-white/5">
+                    <span class="text-[10px] text-neutral-400 block font-medium">Dirección del Local</span>
+                    <span class="font-semibold text-[11px] text-neutral-200 truncate block">{{ rep.tienda?.direccion_escrita }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+
+
+          <!-- PESTAÑA: TALLERES MECÁNICOS CERTIFICADOS PARA INSTALACIÓN -->
+          @if (tabDetalle() === 'talleres') {
+            <div class="space-y-4">
+              <!-- Banner Guía: En el taller o instalación a domicilio -->
+              <div class="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs space-y-1.5">
+                <div class="flex items-center space-x-2">
+                  <div class="w-6 h-6 rounded-lg bg-blue-500/15 text-[#0071E3] flex items-center justify-center flex-shrink-0">
+                    <app-icon name="wrench" size="sm"></app-icon>
+                  </div>
+                  <h4 class="font-bold text-[#0071E3]">¿Estás actualmente en el taller con tu vehículo desarmado?</h4>
+                </div>
+                <p class="text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                  Si tu mecánico te indicó comprar este repuesto, pídelo ahora mismo seleccionando <strong>"Envío Express a Domicilio / Taller"</strong> en el checkout. Un repartidor lo llevará directamente a la ubicación del taller en 35 a 55 minutos para que no pierdas horas buscando repuestos por la ciudad.
+                </p>
+              </div>
+
+              <!-- Lista de Talleres Aliados Recomendados para este Repuesto -->
+              <div class="space-y-3">
+                <h4 class="text-xs font-bold text-neutral-900 dark:text-white uppercase tracking-wider">
+                  Talleres Aliados Recomendados para Montaje de {{ rep.categoria?.nombre || 'este Repuesto' }}
+                </h4>
+
+                @if (talleresInstalacion().length === 0) {
+                  <div class="apple-card rounded-2xl p-6 text-center space-y-2">
+                    <p class="text-xs font-semibold text-neutral-700 dark:text-neutral-300">No hay talleres mecánicos aliados registrados en este momento</p>
+                    <p class="text-[11px] text-neutral-500">Los talleres verificados en Santa Cruz aparecerán aquí para recibir el repuesto e instalarlo directamente.</p>
+                  </div>
+                } @else {
+                  @for (taller of talleresInstalacion(); track taller.id) {
+                    <div class="apple-card rounded-2xl p-4.5 shadow-sm space-y-3 hover:border-[#0071E3]/40 transition-colors">
+                      <div class="flex flex-wrap items-start justify-between gap-2">
+                        <div class="space-y-1">
+                          <div class="flex items-center space-x-2">
+                            <h5 class="text-sm font-bold text-neutral-900 dark:text-white">{{ taller.nombre }}</h5>
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-bold">
+                              Taller Verificado
+                            </span>
+                          </div>
+                          <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ taller.especialidad || 'Instalación y Mantenimiento Mecánico' }}</p>
+                        </div>
+
+                        <div class="flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-xs">
+                          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                          <span>{{ taller.calificacion || '5.0' }}</span>
+                          <span class="text-[10px] text-neutral-400 font-normal">({{ taller.total_resenas || 0 }} opiniones)</span>
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1 border-t border-black/[0.04] dark:border-white/[0.06]">
+                        <div>
+                          <span class="text-[10px] text-neutral-400 block font-semibold">Dirección Física</span>
+                          <span class="font-semibold text-neutral-800 dark:text-neutral-200 line-clamp-1">{{ taller.direccion_escrita }}</span>
+                        </div>
+                        <div>
+                          <span class="text-[10px] text-neutral-400 block font-semibold">Horario de Atención</span>
+                          <span class="font-semibold text-neutral-800 dark:text-neutral-200">{{ taller.horario_atencion || 'Lun a Sáb' }}</span>
+                        </div>
+                      </div>
+
+                      <div class="flex items-center justify-between pt-1">
+                        <span class="text-[11px] text-neutral-500 font-mono">Contacto Taller: {{ taller.telefono }}</span>
+                        <a
+                          [routerLink]="['/comprador/checkout', rep.id]"
+                          class="active:scale-[0.98] transition-all px-3.5 py-1.5 rounded-xl bg-neutral-900 hover:bg-black dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-semibold shadow-sm flex items-center space-x-1.5">
+                          <span>Comprar y Coordinar Instalación</span>
+                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                          </svg>
+                        </a>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          }
+
+          <!-- PESTAÑA 2: CALIFICACIONES Y COMENTARIOS VERIFICADOS -->
+          @if (tabDetalle() === 'resenas') {
+            <div class="space-y-5">
+              <!-- Formulario para agregar comentario y calificación -->
+              <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-200/70 dark:border-white/[0.08] space-y-3">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-xs font-bold text-neutral-900 dark:text-white">Calificar este Repuesto y Tienda</h4>
+                  <div class="flex items-center space-x-1">
+                    @for (star of [1, 2, 3, 4, 5]; track star) {
+                      <button
+                        type="button"
+                        (click)="nuevaCalificacion.set(star)"
+                        class="p-1 focus:outline-none">
+                        <svg
+                          class="w-5 h-5 transition-colors"
+                          [class.fill-amber-400]="star <= nuevaCalificacion()"
+                          [class.text-amber-500]="star <= nuevaCalificacion()"
+                          [class.fill-neutral-200]="star > nuevaCalificacion()"
+                          [class.text-neutral-300]="star > nuevaCalificacion()"
+                          viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                  <input
+                    type="text"
+                    [(ngModel)]="nuevoVehiculoResena"
+                    placeholder="Vehículo donde se instaló (ej. Corolla 2021)"
+                    class="px-3 py-2 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
+                  />
+                  <input
+                    type="text"
+                    [(ngModel)]="nuevoComentarioResena"
+                    (keyup.enter)="publicarResena()"
+                    placeholder="Escribe tu opinión sobre calidad, calce OEM y tiempo de entrega..."
+                    class="sm:col-span-2 px-3 py-2 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
+                  />
+                </div>
+
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    (click)="publicarResena()"
+                    [disabled]="enviandoResena() || !nuevoComentarioResena().trim()"
+                    class="active:scale-[0.98] transition-all px-4 py-2 rounded-xl bg-neutral-900 hover:bg-black dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-semibold">
+                    {{ enviandoResena() ? 'Publicando...' : 'Publicar Comentario' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Lista de Comentarios -->
+              <div class="space-y-3">
+                @for (r of resenas(); track r.id) {
+                  <div class="p-4 rounded-2xl bg-white dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08] shadow-[0_2px_8px_rgb(0,0,0,0.02)] space-y-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold text-neutral-900 dark:text-white">{{ r.autor_nombre }}</span>
+                        @if (r.compra_verificada) {
+                          <span class="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 text-[10px] font-semibold border border-emerald-200/60 dark:border-emerald-800/50">
+                            Compra Verificada Escrow
+                          </span>
+                        }
+                      </div>
+                      <div class="flex items-center space-x-1">
+                        @for (s of [1, 2, 3, 4, 5]; track s) {
+                          <svg
+                            class="w-3.5 h-3.5"
+                            [class.fill-amber-400]="s <= r.calificacion"
+                            [class.fill-neutral-200]="s > r.calificacion"
+                            viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        }
+                      </div>
+                    </div>
+
+                    <p class="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed">{{ r.comentario }}</p>
+
+                    <div class="flex items-center justify-between text-[10px] text-neutral-500 dark:text-neutral-300 pt-1">
+                      <span>Instalado en: <strong class="text-neutral-600 dark:text-neutral-300">{{ r.vehiculo_instalado }}</strong></span>
+                      <span>{{ r.creado_en | date:'mediumDate' }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+
+
+          <!-- PESTAÑA 3: CHAT TÉCNICO PRE-COMPRA -->
+          @if (tabDetalle() === 'chat') {
+            <div id="seccion-chat-tecnico" class="space-y-4">
+              <div class="p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-xs text-neutral-700 dark:text-neutral-300 flex items-center justify-between">
+                <span>Consulta directamente al especialista de <strong class="text-neutral-900 dark:text-white">{{ rep.tienda?.nombre }}</strong> sobre disponibilidad y especificaciones.</span>
+                <span class="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 text-[10px] font-bold flex-shrink-0 ml-2">En línea</span>
+              </div>
+
+              <div class="max-h-72 overflow-y-auto space-y-2.5 p-3 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08]">
+                @if (mensajesChat().length === 0) {
+                  <div class="py-6 text-center text-xs text-neutral-400">
+                    Inicia una conversación con la tienda enviando tu consulta abajo.
+                  </div>
+                }
+                @for (msg of mensajesChat(); track msg.id) {
+                  <div class="flex flex-col" [class.items-end]="msg.remitente_tipo === 'COMPRADOR'" [class.items-start]="msg.remitente_tipo !== 'COMPRADOR'">
+                    <div class="p-3 rounded-2xl max-w-[85%] text-xs"
+                      [class.bg-[#0071E3]]="msg.remitente_tipo === 'COMPRADOR'"
+                      [class.text-white]="msg.remitente_tipo === 'COMPRADOR'"
+                      [class.bg-white]="msg.remitente_tipo !== 'COMPRADOR'"
+                      [class.dark:bg-neutral-800]="msg.remitente_tipo !== 'COMPRADOR'"
+                      [class.text-neutral-900]="msg.remitente_tipo !== 'COMPRADOR'"
+                      [class.dark:text-white]="msg.remitente_tipo !== 'COMPRADOR'"
+                      [class.border]="msg.remitente_tipo !== 'COMPRADOR'"
+                      [class.border-neutral-200]="msg.remitente_tipo !== 'COMPRADOR'"
+                      [class.dark:border-neutral-700]="msg.remitente_tipo !== 'COMPRADOR'">
+                      @if (msg.es_confirmacion_compatibilidad) {
+                        <div class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-1 flex items-center space-x-1">
+                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                          <span>Compatibilidad 100% Confirmada por Tienda</span>
+                        </div>
+                      }
+                      <div>{{ msg.texto }}</div>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <div class="flex space-x-2">
+                <input
+                  id="input-chat-tecnico"
+                  type="text"
+                  [(ngModel)]="nuevoMensaje"
+                  (keyup.enter)="enviarMensajeChat()"
+                  placeholder="Escribe un mensaje a la tienda..."
+                  class="flex-1 px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-white/[0.06] border border-neutral-200 dark:border-white/[0.1] text-neutral-900 dark:text-white text-xs focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
+                />
+                <button
+                  (click)="enviarMensajeChat()"
+                  class="active:scale-[0.98] transition-all px-5 py-2.5 rounded-xl bg-[#0071E3] text-white text-xs font-semibold">
+                  Enviar Mensaje
+                </button>
+              </div>
+            </div>
+          }
+
+
+
+          <!-- PESTAÑA 4: COMPARADOR MULTITIENDA -->
+          @if (tabDetalle() === 'comparador') {
+            <div class="space-y-3">
+              @if (tiendasComparativas().length === 0) {
+                <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08] text-center space-y-2">
+                  <div class="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h4 class="text-sm font-bold text-neutral-900 dark:text-white">Pieza exclusiva de esta tienda</h4>
+                  <p class="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm mx-auto">
+                    Actualmente ninguna otra tienda tiene registrado este número OEM ({{ rep.numero_oem || rep.sku }}). Estás comprando directamente al importador verificado.
+                  </p>
+                </div>
+              } @else {
+                @for (t of tiendasComparativas(); track t.repuesto_id) {
+                  <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08] flex flex-wrap items-center justify-between gap-3">
+                    <div class="space-y-0.5">
+                      <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold text-neutral-900 dark:text-white">{{ t.tienda_nombre }}</span>
+                        <span class="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-[#0071E3] text-[10px] font-bold">
+                          Tienda Verificada
+                        </span>
+                      </div>
+                      <p class="text-[11px] text-neutral-500 dark:text-neutral-400">{{ t.tienda_direccion }}</p>
+                    </div>
+                    <div class="text-right flex items-center space-x-3">
+                      <div>
+                        <div class="text-sm font-bold text-neutral-900 dark:text-white">{{ formatearPrecio(t.precio_bob, t.precio_usd) }}</div>
+                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Prep: {{ t.tiempo_entrega_horas || 1 }}h</span>
+                      </div>
+                      <button
+                        (click)="irAPagar(t.repuesto_id)"
+                        class="active:scale-[0.98] transition-all px-3.5 py-2 rounded-xl bg-[#0071E3] text-white text-xs font-semibold">
+                        Elegir Tienda
+                      </button>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          }
+
+
+        </div>
+
+      </div>
+
+      <!-- COLUMNA DERECHA: CAJA DE COMPRA Y RESUMEN PEDIDOSYA + ESCROW (5 COLUMNAS, STICKY) -->
+      <div class="lg:col-span-5 lg:sticky lg:top-20 space-y-5">
+
+        <div class="apple-card rounded-3xl p-6 shadow-xl space-y-5">
+
+          <!-- Precio Principal -->
+          <div class="flex items-baseline justify-between border-b border-neutral-100 dark:border-neutral-800 pb-4">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">Precio Garantizado en Tienda</span>
+              <div class="text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-white mt-0.5">
+                {{ formatearPrecio(rep.precio_bob * cantidad(), rep.precio_usd * cantidad()) }}
+              </div>
+              <span class="text-[11px] text-neutral-500 dark:text-neutral-400">
+                @if (cantidad() > 1) {
+                  {{ cantidad() }} unidades • Precio unitario: {{ formatearPrecio(rep.precio_bob, rep.precio_usd) }}
+                } @else {
+                  Equivalente: {{ moneda() === 'BOB' ? '$ ' + rep.precio_usd.toFixed(2) + ' USD' : 'Bs ' + rep.precio_bob.toFixed(2) }}
+                }
+              </span>
+            </div>
+
+            <div class="text-right">
+              <span class="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-xs font-bold flex items-center space-x-1.5 justify-end">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>En Stock Garantizado</span>
+              </span>
+              <span class="text-[10px] text-neutral-400 block mt-1">Reserva inmediata con Escrow</span>
+            </div>
+          </div>
+
+          <!-- Selector de Cantidad por Unidades -->
+          <div class="p-3.5 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08] flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-neutral-900 dark:text-white block">Cantidad requerida</span>
+              <span class="text-[10px] text-neutral-500 dark:text-neutral-400">Stock físico: {{ rep.stock_disponible || 10 }} unidades</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button
+                type="button"
+                (click)="decrementarCantidad()"
+                [disabled]="cantidad() <= 1"
+                class="w-8 h-8 rounded-xl bg-neutral-200 dark:bg-white/[0.1] hover:bg-neutral-300 dark:hover:bg-white/[0.15] text-neutral-900 dark:text-white font-bold flex items-center justify-center disabled:opacity-30 transition-all">
+                −
+              </button>
+              <span class="w-7 text-center text-sm font-extrabold text-neutral-900 dark:text-white">{{ cantidad() }}</span>
+              <button
+                type="button"
+                (click)="incrementarCantidad()"
+                [disabled]="cantidad() >= (rep.stock_disponible || 10)"
+                class="w-8 h-8 rounded-xl bg-neutral-200 dark:bg-white/[0.1] hover:bg-neutral-300 dark:hover:bg-white/[0.15] text-neutral-900 dark:text-white font-bold flex items-center justify-center disabled:opacity-30 transition-all">
+                +
+              </button>
+            </div>
+          </div>
+
+          <!-- Resumen estilo PedidosYa de Tiempos y Modalidades -->
+          <div class="space-y-2.5 text-xs">
+            <div class="p-3.5 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08] space-y-1">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                  <div class="w-8 h-8 rounded-xl bg-blue-500/10 text-[#0071E3] flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.25H4.125C3.504 7.5 3 8.004 3 8.625V14.25m11.25-6.75v6.75" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="font-bold text-neutral-900 dark:text-white">Envío Express a Domicilio / Taller</div>
+                    <div class="text-[11px] text-neutral-500 dark:text-neutral-400">Prep: {{ rep.tiempo_entrega_horas || 1 }}h • Repartidor asignado por peso ({{ (rep.peso_kg || 1) * cantidad() }} kg)</div>
+                  </div>
+                </div>
+                <span class="font-bold text-neutral-900 dark:text-white">Desde Bs 10</span>
+              </div>
+              <p class="text-[10px] text-neutral-500 dark:text-neutral-300 pt-0.5 pl-10.5">
+                Tarifa base de arranque. Se cotiza con precisión en checkout según distancia a tu destino y peso acumulado.
+              </p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08] flex items-center justify-between">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.651V9.35m0 0a3.001 3.001 0 003.75-.614A2.996 2.996 0 009.75 9.35c.82 0 1.58-.33 2.14-.863a3.002 3.002 0 004.22 0c.56.533 1.32.863 2.14.863a2.996 2.996 0 002.36-.614 3.001 3.001 0 003.75.614M3.75 9.35V4.875c0-.621.504-1.125 1.125-1.125h14.25c.621 0 1.125.504 1.125 1.125v4.474" />
+                  </svg>
+                </div>
+                <div>
+                  <div class="font-bold text-neutral-900 dark:text-white">Retiro Directo en Mostrador</div>
+                  <div class="text-[11px] text-neutral-500 dark:text-neutral-400">{{ rep.tienda?.direccion_escrita }}</div>
+                </div>
+              </div>
+              <span class="font-bold text-emerald-600 dark:text-emerald-400">Gratis</span>
+            </div>
+          </div>
+
+          <!-- Explicación de Custodia Escrow -->
+          <div class="p-4 rounded-2xl bg-neutral-900 dark:bg-black text-white space-y-2 text-xs border border-white/10">
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
+              <span class="font-bold">Compra Protegida con Custodia Escrow</span>
+            </div>
+            <p class="text-[11px] text-neutral-300 leading-relaxed">
+              Tu pago en <strong>BOB o USD</strong> queda retenido en TuAuto. La tienda y el repartidor solo cobran cuando recibes el repuesto en tus manos y entregas tu <strong>PIN de 4 dígitos</strong>.
+            </p>
+          </div>
+
+          <!-- Botones de Acción Principales -->
+          <div class="space-y-2.5">
+            <button
+              (click)="irAPagar()"
+              class="active:scale-[0.98] transition-all w-full py-3.5 px-5 rounded-2xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-sm font-bold shadow-md flex items-center justify-center space-x-2">
+              <span>Continuar a la Vista de Pago ({{ cantidad() }} {{ cantidad() === 1 ? 'unidad' : 'unidades' }})</span>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </button>
+
+            <button
+              (click)="irAChat()"
+              class="active:scale-[0.98] transition-all w-full py-2.5 px-4 rounded-xl bg-neutral-100 hover:bg-neutral-200/80 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-semibold flex items-center justify-center space-x-1.5">
+              <svg class="w-4 h-4 text-neutral-600 dark:text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-.974-.94 4.5 4.5 0 00.74-2.183C3.606 16.368 3 14.28 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+              </svg>
+              <span>Consultar con la Tienda / Iniciar Chat</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  }
+
+</div>

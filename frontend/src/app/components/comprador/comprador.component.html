@@ -1,0 +1,556 @@
+<div class="space-y-6">
+
+  <!-- Segmented Control Superior (Apple Style) -->
+  <div class="flex flex-wrap items-center justify-between gap-3 p-2 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl rounded-2xl border border-black/[0.06] dark:border-white/[0.08] shadow-sm">
+    <div class="flex items-center space-x-2">
+      <div class="inline-flex p-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.02]">
+        <a 
+          [routerLink]="['/comprador', 'catalogo']"
+          [class.bg-white]="seccionActiva() === 'catalogo'"
+          [class.dark:bg-[#2C2C2E]]="seccionActiva() === 'catalogo'"
+          [class.text-neutral-900]="seccionActiva() === 'catalogo'"
+          [class.dark:text-white]="seccionActiva() === 'catalogo'"
+          [class.shadow-sm]="seccionActiva() === 'catalogo'"
+          [class.text-neutral-500]="seccionActiva() !== 'catalogo'"
+          [class.dark:text-neutral-400]="seccionActiva() !== 'catalogo'"
+          class="active:scale-[0.98] transition-all duration-150 px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <span>Catálogo de Repuestos</span>
+        </a>
+
+        <a 
+          [routerLink]="['/comprador', 'pedidos']"
+          [class.bg-white]="seccionActiva() === 'pedidos'"
+          [class.dark:bg-[#2C2C2E]]="seccionActiva() === 'pedidos'"
+          [class.text-neutral-900]="seccionActiva() === 'pedidos'"
+          [class.dark:text-white]="seccionActiva() === 'pedidos'"
+          [class.shadow-sm]="seccionActiva() === 'pedidos'"
+          [class.text-neutral-500]="seccionActiva() !== 'pedidos'"
+          [class.dark:text-neutral-400]="seccionActiva() !== 'pedidos'"
+          class="active:scale-[0.98] transition-all duration-150 px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+          </svg>
+          <span>Mis Pedidos & Escrow</span>
+          @if (misPedidos().length > 0) {
+            <span class="w-4 h-4 rounded-full bg-[#0071E3] text-white text-[10px] font-bold flex items-center justify-center">{{ misPedidos().length }}</span>
+          }
+        </a>
+      </div>
+
+      <!-- Botón de Sincronización Manual Estilo Apple -->
+      <button
+        type="button"
+        (click)="refrescarManual()"
+        [disabled]="cargandoManual()"
+        class="active:scale-95 transition-all p-2 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] border border-black/[0.04] text-neutral-600 dark:text-neutral-300 flex items-center space-x-1.5 text-xs font-semibold"
+        title="Actualizar datos en tiempo real">
+        <svg class="w-3.5 h-3.5 text-[#0071E3]" [class.animate-spin]="cargandoManual()" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+        </svg>
+        <span class="hidden sm:inline">Refrescar</span>
+      </button>
+    </div>
+
+    <!-- Controles de Divisa y Garaje -->
+    <div class="flex items-center space-x-2">
+      <!-- Toggle Divisa BOB / USD -->
+      <button 
+        (click)="toggleMoneda()"
+        class="active:scale-[0.97] transition-all px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 border border-black/[0.04] dark:border-white/[0.08]">
+        <span [class.text-[#0071E3]]="moneda() === 'BOB'" [class.font-bold]="moneda() === 'BOB'">BOB</span>
+        <span class="text-neutral-400 mx-1">/</span>
+        <span [class.text-[#0071E3]]="moneda() === 'USD'" [class.font-bold]="moneda() === 'USD'">USD</span>
+      </button>
+
+      <!-- Mi Garaje Pill -->
+      <button 
+        (click)="modalGarajeAbierto.set(true)"
+        class="active:scale-[0.97] transition-all px-3.5 py-1.5 rounded-full bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-medium shadow-sm flex items-center space-x-1.5">
+        <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.25H4.125C3.504 7.5 3 8.004 3 8.625V14.25m11.25-6.75v6.75" />
+        </svg>
+        <span>
+          @if (vehiculoSeleccionado(); as v) {
+            {{ v.modelo?.marca?.nombre }} {{ v.modelo?.nombre }} ({{ v.anio }})
+          } @else {
+            Mi Garaje
+          }
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 1: CATÁLOGO DE REPUESTOS -->
+  @if (seccionActiva() === 'catalogo') {
+    <div class="space-y-6">
+      
+      <!-- Buscador y Filtros Superiores con Dropdowns Apple -->
+      <div class="apple-card rounded-3xl p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">Repuestos Automotrices en Santa Cruz</h2>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Verificados por código OEM y tienda física para despacho hacia {{ ubicacion.ubicacionActiva()?.alias || 'tu ubicación' }}.</p>
+          </div>
+
+          @if (vehiculoSeleccionado(); as v) {
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-medium">
+              <span>{{ v.modelo?.marca?.nombre }} {{ v.modelo?.nombre }} {{ v.anio }}</span>
+              <button (click)="onClearVehiculo()" class="w-4 h-4 rounded-full bg-white/20 dark:bg-black/20 flex items-center justify-center transition-colors ml-1">
+                <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Barra de Búsqueda y Dropdowns Apple Estilizados (Sin Selects Nativos de Windows) -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <div class="relative flex-1 min-w-[240px]">
+            <input 
+              type="text"
+              [(ngModel)]="busqueda"
+              (ngModelChange)="paginaActual.set(1); cargarRepuestos()"
+              placeholder="Buscar por repuesto, código OEM (ej. 04465-02220) o SKU..."
+              class="w-full pl-9 pr-4 py-2.5 rounded-xl apple-input text-xs focus:outline-none"
+            />
+            <svg class="w-4 h-4 text-neutral-400 absolute left-3 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+          </div>
+
+          <!-- Selector de Ordenamiento Apple -->
+          <app-custom-select
+            [opciones]="opcionesOrden"
+            [valorSeleccionado]="orden()"
+            (valorSeleccionadoChange)="cambiarOrden($event)">
+          </app-custom-select>
+
+          <!-- Selector de Límite por Página Apple (Pedido por el usuario) -->
+          <app-custom-select
+            [opciones]="opcionesLimite"
+            [valorSeleccionado]="limitePorPagina()"
+            (valorSeleccionadoChange)="cambiarLimite($event)">
+          </app-custom-select>
+        </div>
+
+        <!-- Carrusel Categorías Estilo Píldora -->
+        <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar pt-1">
+          <button 
+            (click)="seleccionarCategoria(null)"
+            [class.bg-neutral-900]="categoriaId() === null"
+            [class.dark:bg-white]="categoriaId() === null"
+            [class.text-white]="categoriaId() === null"
+            [class.dark:text-neutral-900]="categoriaId() === null"
+            [class.bg-neutral-100]="categoriaId() !== null"
+            [class.dark:bg-neutral-800]="categoriaId() !== null"
+            [class.text-neutral-700]="categoriaId() !== null"
+            [class.dark:text-neutral-300]="categoriaId() !== null"
+            class="active:scale-[0.98] px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0">
+            Todas las Categorías
+          </button>
+          @for (cat of categorias(); track cat.id) {
+            <button 
+              (click)="seleccionarCategoria(cat.id)"
+              [class.bg-neutral-900]="categoriaId() === cat.id"
+              [class.dark:bg-white]="categoriaId() === cat.id"
+              [class.text-white]="categoriaId() === cat.id"
+              [class.dark:text-neutral-900]="categoriaId() === cat.id"
+              [class.bg-neutral-100]="categoriaId() !== cat.id"
+              [class.dark:bg-neutral-800]="categoriaId() !== cat.id"
+              [class.text-neutral-700]="categoriaId() !== cat.id"
+              [class.dark:text-neutral-300]="categoriaId() !== cat.id"
+              class="active:scale-[0.98] px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0">
+              {{ cat.nombre }}
+            </button>
+          }
+        </div>
+
+        <!-- Indicador Limpio y Sobrio (Sin textos técnicos ni jerga SQL) -->
+        <div class="pt-2 border-t border-black/[0.04] dark:border-white/[0.06] flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400">
+          <span>{{ totalResultados() }} repuestos encontrados</span>
+          <span>Página {{ paginaActual() }} de {{ totalPaginas() }}</span>
+        </div>
+      </div>
+
+      <!-- Grilla de Repuestos (Estilo Apple / PedidosYa — Sin Stock Numérico) -->
+      @if (cargandoCatalogo()) {
+        <div class="apple-card rounded-3xl p-12 text-center text-xs text-neutral-500 dark:text-neutral-400">
+          Cargando catálogo...
+        </div>
+      } @else if (repuestos().length === 0) {
+        <div class="apple-card rounded-3xl p-12 text-center space-y-3">
+          <p class="text-sm font-bold text-neutral-900 dark:text-white">No hay repuestos para los filtros aplicados</p>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">Prueba cambiando de categoría o quitando el filtro de vehículo.</p>
+          <button (click)="seleccionarCategoria(null); onClearVehiculo(); busqueda.set(''); cargarRepuestos()" class="px-4 py-2 rounded-xl bg-[#0071E3] text-white text-xs font-semibold">
+            Restablecer búsqueda
+          </button>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          @for (rep of repuestos(); track rep.id) {
+            <div 
+              (click)="verDetalleRepuesto(rep)"
+              class="group cursor-pointer apple-card rounded-3xl p-5 flex flex-col justify-between space-y-4 hover:border-[#0071E3]/40 transition-all relative">
+              
+              @if (rep.es_destacado) {
+                <div class="absolute -top-2.5 left-5 z-10 px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-semibold uppercase tracking-wider shadow-sm flex items-center space-x-1">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span>Patrocinado</span>
+                </div>
+              }
+
+              <div class="space-y-3">
+                <div class="w-full h-44 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 relative">
+                  <img 
+                    [src]="rep.url_imagen" 
+                    (error)="$any($event.target).src = 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=600&auto=format&fit=crop&q=80'"
+                    class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300" />
+                  
+                  <!-- Badge Limpio de Disponibilidad (El comprador NUNCA ve la cantidad física en stock) -->
+                  <div class="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full bg-emerald-500/95 text-white text-[10px] font-semibold backdrop-blur-md flex items-center space-x-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                    <span>Disponible</span>
+                  </div>
+
+                  <div class="absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-lg bg-black/65 text-white text-[10px] font-medium backdrop-blur-md">
+                    {{ rep.categoria?.nombre }}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 class="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-[#0071E3] transition-colors line-clamp-1">{{ rep.titulo }}</h3>
+                  <div class="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center space-x-1.5 mt-0.5 font-mono">
+                    <span>SKU: {{ rep.sku }}</span>
+                    @if (rep.numero_oem) {
+                      <span>• OEM: <strong class="text-[#0071E3] font-mono">{{ rep.numero_oem }}</strong></span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Tienda, Calificación y Tiempo de Entrega hacia Ubicación Comprador -->
+                <div class="p-3 rounded-2xl bg-neutral-50/90 dark:bg-neutral-800/60 text-xs space-y-1.5 border border-black/[0.04] dark:border-white/[0.06]">
+                  <div class="font-semibold text-neutral-900 dark:text-white flex justify-between items-center">
+                    <span class="truncate pr-2">{{ rep.tienda?.nombre }}</span>
+                    <span class="inline-flex items-center space-x-1 text-amber-500 font-bold text-xs flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span>{{ rep.tienda?.calificacion }}</span>
+                    </span>
+                  </div>
+                  <div class="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center justify-between">
+                    <span class="truncate">{{ rep.tienda?.direccion_escrita }}</span>
+                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold flex-shrink-0 ml-2">Prep: {{ rep.tiempo_entrega_horas }}h</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Precios y Acciones Directas -->
+              <div class="pt-2 border-t border-black/[0.04] dark:border-white/[0.06] space-y-2.5">
+                <div class="flex items-baseline justify-between">
+                  <span class="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
+                    {{ formatearPrecio(rep.precio_bob, rep.precio_usd) }}
+                  </span>
+                  <span class="text-[11px] text-[#0071E3] font-medium bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-800">
+                    {{ rep.meses_garantia }}m garantía
+                  </span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <button 
+                    type="button"
+                    (click)="verDetalleRepuesto(rep)"
+                    class="active:scale-[0.98] transition-all py-2.5 px-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200/80 dark:hover:bg-neutral-700 text-xs font-semibold text-neutral-800 dark:text-neutral-200 flex items-center justify-center">
+                    <span>Ver Ficha Técnica</span>
+                  </button>
+                  <button 
+                    type="button"
+                    (click)="irAPagarDirecto(rep, $event)"
+                    class="active:scale-[0.98] transition-all py-2.5 px-3 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-sm flex items-center justify-center space-x-1.5">
+                    <span>Ir a Pagar</span>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          }
+        </div>
+
+        <!-- Paginación con Apple Style -->
+        @if (totalPaginas() > 1) {
+          <div class="flex items-center justify-center space-x-2 pt-2">
+            <button
+              (click)="cambiarPagina(paginaActual() - 1)"
+              [disabled]="paginaActual() <= 1"
+              class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-neutral-800 border border-black/[0.08] dark:border-white/[0.1] text-xs font-semibold text-neutral-700 dark:text-neutral-300 disabled:opacity-40">
+              ← Anterior
+            </button>
+            <span class="text-xs font-semibold text-neutral-700 dark:text-neutral-300 px-3">
+              Página {{ paginaActual() }} de {{ totalPaginas() }}
+            </span>
+            <button
+              (click)="cambiarPagina(paginaActual() + 1)"
+              [disabled]="paginaActual() >= totalPaginas()"
+              class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-neutral-800 border border-black/[0.08] dark:border-white/[0.1] text-xs font-semibold text-neutral-700 dark:text-neutral-300 disabled:opacity-40">
+              Siguiente →
+            </button>
+          </div>
+        }
+      }
+
+    </div>
+  }
+
+  <!-- SECCIÓN 2: MIS PEDIDOS -->
+  @if (seccionActiva() === 'pedidos') {
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">Mis Compras & Custodia Escrow</h2>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">Tus fondos están retenidos en garantía en TuAuto hasta que recibas y valides físicamente el repuesto.</p>
+        </div>
+        <button (click)="cargarMisPedidos()" class="text-xs text-[#0071E3] font-semibold hover:underline">
+          Actualizar estado
+        </button>
+      </div>
+
+      @if (misPedidos().length === 0) {
+        <div class="apple-card rounded-3xl p-12 text-center text-xs text-neutral-500 dark:text-neutral-400 space-y-2">
+          <p>No tienes compras activas registradas con tu cuenta.</p>
+        </div>
+      } @else {
+        @for (ped of misPedidos(); track ped.id) {
+          <div class="apple-card rounded-3xl p-5 space-y-4">
+            <!-- Header Orden & Modalidad -->
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-black/[0.04] dark:border-white/[0.06] pb-3">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold font-mono text-neutral-900 dark:text-white">{{ ped.numero_orden }}</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
+                  [class.bg-blue-500/10]="ped.tipo_entrega === 'DELIVERY_MOTO'"
+                  [class.text-[#0071E3]]="ped.tipo_entrega === 'DELIVERY_MOTO'"
+                  [class.bg-purple-500/10]="ped.tipo_entrega === 'RETIRO_TIENDA'"
+                  [class.text-purple-600]="ped.tipo_entrega === 'RETIRO_TIENDA'">
+                  {{ ped.tipo_entrega === 'DELIVERY_MOTO' ? 'Envío Express a Domicilio' : 'Retiro en Tienda' }}
+                </span>
+              </div>
+
+              <!-- Estado badge -->
+              @if (ped.estado === 'EN_PREPARACION') {
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                  🟡 Tienda preparando tu repuesto
+                </span>
+              } @else if (ped.estado === 'EN_CAMINO_A_TIENDA') {
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/10 text-[#0071E3] border border-blue-500/20 animate-pulse">
+                  🚗 Repartidor de ida a la tienda
+                </span>
+              } @else if (ped.estado === 'EN_TIENDA') {
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                  📍 Repartidor en la tienda cargando el paquete
+                </span>
+              } @else if (ped.estado === 'EN_CAMINO_A_DESTINO' || ped.estado === 'EN_CAMINO') {
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 animate-pulse">
+                  🚀 Repartidor de camino a tu ubicación
+                </span>
+              } @else if (ped.estado === 'EN_DESTINO') {
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 animate-bounce">
+                  🎯 ¡Repartidor ha llegado a tu puerta!
+                </span>
+              } @else if (ped.estado === 'LISTO_RETIRO') {
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/10 text-purple-600 border border-purple-500/20">
+                  🏪 Listo para recoger en mostrador
+                </span>
+              } @else if (ped.estado === 'COMPLETADO') {
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                  ✅ Pedido Completado
+                </span>
+              } @else {
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+                  {{ ped.estado }}
+                </span>
+              }
+            </div>
+
+            <!-- Timeline Visual de Seguimiento Dinámico -->
+            <div class="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.06] space-y-2">
+              <span class="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider block">Progreso en Vivo del Pedido</span>
+              
+              @if (ped.tipo_entrega === 'DELIVERY_MOTO') {
+                <!-- Flujo con Repartidor (4 Pasos) -->
+                <div class="grid grid-cols-4 gap-1 text-center text-[10px]">
+                  <div class="space-y-1">
+                    <div class="h-1.5 rounded-full bg-emerald-500"></div>
+                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">1. Pagado</span>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="h-1.5 rounded-full"
+                      [class.bg-emerald-500]="ped.estado !== 'PAGADO_ESCROW' && ped.estado !== 'PENDIENTE_PAGO'"
+                      [class.bg-neutral-200]="ped.estado === 'PAGADO_ESCROW' || ped.estado === 'PENDIENTE_PAGO'"></div>
+                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">2. Preparando</span>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="h-1.5 rounded-full"
+                      [class.bg-emerald-500]="ped.estado === 'EN_CAMINO_A_DESTINO' || ped.estado === 'EN_DESTINO' || ped.estado === 'COMPLETADO' || ped.estado === 'EN_CAMINO'"
+                      [class.bg-blue-500]="ped.estado === 'EN_CAMINO_A_TIENDA' || ped.estado === 'EN_TIENDA'"
+                      [class.bg-neutral-200]="ped.estado === 'EN_PREPARACION' || ped.estado === 'PAGADO_ESCROW'"></div>
+                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">3. De Camino</span>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="h-1.5 rounded-full"
+                      [class.bg-emerald-500]="ped.estado === 'COMPLETADO'"
+                      [class.bg-amber-500]="ped.estado === 'EN_DESTINO'"
+                      [class.bg-neutral-200]="ped.estado !== 'EN_DESTINO' && ped.estado !== 'COMPLETADO'"></div>
+                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">4. Entregado</span>
+                  </div>
+                </div>
+              } @else {
+                <!-- Flujo Retiro en Tienda (3 Pasos) -->
+                <div class="grid grid-cols-3 gap-1 text-center text-[10px]">
+                  <div class="space-y-1">
+                    <div class="h-1.5 rounded-full bg-emerald-500"></div>
+                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">1. Pago Escrow</span>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="h-1.5 rounded-full"
+                      [class.bg-emerald-500]="ped.estado === 'LISTO_RETIRO' || ped.estado === 'COMPLETADO'"
+                      [class.bg-amber-500]="ped.estado === 'EN_PREPARACION'"
+                      [class.bg-neutral-200]="ped.estado === 'PAGADO_ESCROW'"></div>
+                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">2. Alistando en Local</span>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="h-1.5 rounded-full"
+                      [class.bg-emerald-500]="ped.estado === 'COMPLETADO'"
+                      [class.bg-purple-500]="ped.estado === 'LISTO_RETIRO'"
+                      [class.bg-neutral-200]="ped.estado !== 'LISTO_RETIRO' && ped.estado !== 'COMPLETADO'"></div>
+                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">3. Retirado en Mostrador</span>
+                  </div>
+                </div>
+              }
+
+              <!-- Explicación en lenguaje natural según estado actual -->
+              <p class="text-xs text-neutral-600 dark:text-neutral-300 pt-1">
+                @if (ped.estado === 'EN_PREPARACION') {
+                  La tienda <strong>{{ ped.tienda?.nombre }}</strong> está alistando tu repuesto en este momento.
+                } @else if (ped.estado === 'EN_CAMINO_A_TIENDA') {
+                  Un repartidor ya aceptó la carrera y se encuentra en camino al local para retirar tu pieza.
+                } @else if (ped.estado === 'EN_TIENDA') {
+                  El repartidor está en el mostrador de la repuestera verificando el repuesto antes de salir.
+                } @else if (ped.estado === 'EN_CAMINO_A_DESTINO' || ped.estado === 'EN_CAMINO') {
+                  ¡Repuesto en viaje! El repartidor se dirige hacia <strong>{{ ped.direccion_escrita || 'tu ubicación' }}</strong>.
+                } @else if (ped.estado === 'EN_DESTINO') {
+                  <span class="text-emerald-600 dark:text-emerald-400 font-bold">¡El repartidor está en tu puerta! Dicta tu PIN para recibir la pieza.</span>
+                } @else if (ped.estado === 'LISTO_RETIRO') {
+                  <span class="text-purple-600 dark:text-purple-400 font-bold">¡Tu repuesto está listo para recoger en {{ ped.tienda?.nombre }}! Presenta tu PIN en mostrador.</span>
+                } @else if (ped.estado === 'COMPLETADO') {
+                  Pieza entregada y validada con PIN. ¡Gracias por confiar en TuAuto!
+                }
+              </p>
+            </div>
+
+            <!-- Ficha del Repuesto y PIN de Seguridad -->
+            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
+              <div class="flex items-center space-x-3">
+                <img [src]="ped.repuesto?.url_imagen" class="w-14 h-14 rounded-xl object-cover bg-neutral-100 dark:bg-neutral-800 flex-shrink-0" />
+                <div class="space-y-0.5">
+                  <h4 class="text-xs font-bold text-neutral-900 dark:text-white">{{ ped.repuesto?.titulo }}</h4>
+                  <p class="text-[11px] text-neutral-600 dark:text-neutral-300">Tienda: {{ ped.tienda?.nombre }}</p>
+                  <p class="text-xs font-bold text-neutral-900 dark:text-white">Total Pagado: Bs {{ ped.total_bs.toFixed(2) }}</p>
+                </div>
+              </div>
+
+              <!-- Caja Destacada del PIN de Entrega -->
+              <div class="p-3.5 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 text-center min-w-[140px] flex-shrink-0">
+                <span class="text-[9px] text-blue-600 dark:text-blue-400 uppercase font-bold tracking-wider block">Tu PIN de Seguridad</span>
+                <span class="text-2xl font-black text-[#0071E3] tracking-[0.25em] font-mono block my-0.5">{{ ped.pin_entrega }}</span>
+                <span class="text-[9px] text-neutral-600 dark:text-neutral-300 block leading-tight">Dicta este código solo al recibir el repuesto</span>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <!-- SHEET: GARAJE VEHICULAR -->
+  @if (modalGarajeAbierto()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
+      <div class="apple-card rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+        <div class="flex justify-between items-center border-b border-black/[0.06] dark:border-white/[0.08] pb-2">
+          <h3 class="text-sm font-bold text-neutral-900 dark:text-white">Mi Garaje — Seleccionar Vehículo</h3>
+          <button (click)="modalGarajeAbierto.set(false)" class="w-7 h-7 rounded-full bg-black/[0.04] dark:bg-white/[0.08] flex items-center justify-center text-neutral-500 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">1. Marca del Vehículo</label>
+          <div class="grid grid-cols-4 gap-2">
+            @for (m of marcas(); track m.id) {
+              <button 
+                (click)="onSelectMarca(m.id)"
+                [class.ring-2]="marcaTemp() === m.id"
+                [class.ring-[#0071E3]]="marcaTemp() === m.id"
+                class="p-2.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-black/[0.04] dark:border-white/[0.06] flex flex-col items-center space-y-1">
+                <img [src]="m.url_logo" class="w-7 h-7 object-contain" />
+                <span class="text-[11px] font-bold text-neutral-900 dark:text-white">{{ m.nombre }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (marcaTemp()) {
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">2. Modelo</label>
+            <div class="grid grid-cols-3 gap-2">
+              @for (mod of modelos(); track mod.id) {
+                <button 
+                  (click)="onSelectModelo(mod.id)"
+                  [class.bg-neutral-900]="modeloTemp() === mod.id"
+                  [class.dark:bg-white]="modeloTemp() === mod.id"
+                  [class.text-white]="modeloTemp() === mod.id"
+                  [class.dark:text-neutral-900]="modeloTemp() === mod.id"
+                  [class.bg-neutral-50]="modeloTemp() !== mod.id"
+                  [class.dark:bg-neutral-800]="modeloTemp() !== mod.id"
+                  [class.text-neutral-800]="modeloTemp() !== mod.id"
+                  [class.dark:text-neutral-200]="modeloTemp() !== mod.id"
+                  class="p-2 rounded-xl border border-black/[0.04] dark:border-white/[0.06] text-xs font-semibold text-center transition-all">
+                  {{ mod.nombre }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        @if (modeloTemp()) {
+          <div class="space-y-2 max-h-40 overflow-y-auto no-scrollbar">
+            <label class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">3. Configuración de Motor & Año</label>
+            @for (v of vehiculos(); track v.id) {
+              <button 
+                (click)="onConfirmVehiculo(v)"
+                class="w-full p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-black/[0.04] dark:border-white/[0.06] text-left text-xs font-semibold flex justify-between text-neutral-900 dark:text-white">
+                <span>{{ v.anio }} • {{ v.motor }}</span>
+                <span class="text-[#0071E3]">Seleccionar →</span>
+              </button>
+            }
+          </div>
+        }
+
+        <div class="pt-2 flex justify-between border-t border-black/[0.06] dark:border-white/[0.08]">
+          <button (click)="onClearVehiculo()" class="text-xs font-semibold text-rose-600">Quitar filtro</button>
+          <button (click)="modalGarajeAbierto.set(false)" class="text-xs font-semibold text-neutral-600 dark:text-neutral-400">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

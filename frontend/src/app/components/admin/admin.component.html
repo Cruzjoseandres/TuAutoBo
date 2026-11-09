@@ -1,0 +1,971 @@
+<div class="space-y-6">
+
+  <!-- Notificación Toast Flotante -->
+  @if (notificacion()) {
+    <div class="p-3.5 rounded-2xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-medium shadow-lg flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span>{{ notificacion() }}</span>
+      </div>
+      <button (click)="notificacion.set('')" class="text-neutral-400 dark:text-neutral-300 hover:text-white text-[11px] font-semibold">Cerrar</button>
+    </div>
+  }
+
+  <!-- Header Ejecutivo Admin (Totalmente Adaptable a Móvil) -->
+  <div class="apple-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center space-x-3 sm:space-x-4">
+      <div class="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-2xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
+        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white dark:text-neutral-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+      </div>
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 class="text-base sm:text-lg font-bold tracking-tight text-neutral-900 dark:text-white">Centro de Comando Super Administrador</h1>
+          <span class="px-2.5 py-0.5 rounded-full bg-[#0071E3]/15 text-[#0071E3] dark:text-[#3898EC] text-[10px] font-bold uppercase tracking-wider">
+            Backoffice Enterprise
+          </span>
+        </div>
+        <p class="text-xs text-neutral-600 dark:text-neutral-300 mt-0.5">Aprobación de afiliaciones (tiendas y repartidores), catálogo automotriz, custodia Escrow y 14 variables financieras.</p>
+      </div>
+    </div>
+
+    <!-- Widget Cotización Dólar y Sincronización (Responsive y Alto Contraste) -->
+    <div class="w-full md:w-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-neutral-100/70 dark:bg-white/[0.06] rounded-2xl p-3 border border-neutral-200/80 dark:border-white/[0.1]">
+      <div class="px-1">
+        <span class="text-[10px] text-neutral-500 dark:text-neutral-300 block font-semibold uppercase tracking-wider">Tasa Oficial ($1 USD)</span>
+        <div class="text-sm sm:text-base font-extrabold text-neutral-900 dark:text-white font-mono flex items-center space-x-1">
+          <span>Bs</span>
+          <span>{{ tipoCambio()?.tasa_cambio || '11.81' }}</span>
+        </div>
+      </div>
+      <div class="flex items-center flex-wrap gap-1.5">
+        <input
+          type="number"
+          step="0.01"
+          [ngModel]="nuevaTasa()"
+          (ngModelChange)="nuevaTasa.set($event)"
+          placeholder="11.81"
+          class="w-20 px-2.5 py-1.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 text-xs font-mono font-bold text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
+        />
+        <button
+          (click)="actualizarTasaManual()"
+          class="active:scale-[0.98] px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-black dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-semibold shadow-sm transition-all">
+          Fijar
+        </button>
+        <button 
+          (click)="sincronizarTasaExterna()"
+          class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-sm flex items-center space-x-1">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+          <span>Sync BCB</span>
+        </button>
+
+        <!-- Botón de Refresco de Datos en Vivo -->
+        <button 
+          (click)="refrescarTodoManual()"
+          [disabled]="cargando()"
+          title="Recargar datos frescos de la sección actual"
+          class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-900 dark:bg-white/10 dark:hover:bg-white/15 text-white dark:text-neutral-100 text-xs font-semibold shadow-sm flex items-center space-x-1.5 disabled:opacity-50">
+          <svg class="w-3.5 h-3.5" [class.animate-spin]="cargando()" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+          <span>{{ cargando() ? '...' : 'Refrescar' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de Navegación Móvil Horizontal (Solo visible en pantallas < lg) -->
+  <div class="block lg:hidden apple-card rounded-2xl p-2 shadow-sm sticky top-14 z-30 bg-[#F5F5F7]/95 dark:bg-neutral-900/95 backdrop-blur-md border border-black/[0.06] dark:border-white/[0.1]">
+    <div class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-300 px-2 pb-1.5">
+      Módulos de Administración
+    </div>
+    <nav class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+      <a
+        [routerLink]="['/admin', 'resumen']"
+        [class.bg-neutral-900]="seccionActiva() === 'resumen'"
+        [class.text-white]="seccionActiva() === 'resumen'"
+        [class.dark:bg-white]="seccionActiva() === 'resumen'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'resumen'"
+        [class.text-neutral-700]="seccionActiva() !== 'resumen'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'resumen'"
+        class="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.08]">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
+        </svg>
+        <span>Resumen</span>
+      </a>
+
+      <a
+        [routerLink]="['/admin', 'solicitudes']"
+        [class.bg-neutral-900]="seccionActiva() === 'solicitudes'"
+        [class.text-white]="seccionActiva() === 'solicitudes'"
+        [class.dark:bg-white]="seccionActiva() === 'solicitudes'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'solicitudes'"
+        [class.text-neutral-700]="seccionActiva() !== 'solicitudes'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'solicitudes'"
+        class="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.08]">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Afiliaciones</span>
+        @if (totalSolicitudesPendientes() > 0) {
+          <span class="px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">
+            {{ totalSolicitudesPendientes() }}
+          </span>
+        }
+      </a>
+
+      <a
+        [routerLink]="['/admin', 'aliados']"
+        [class.bg-neutral-900]="seccionActiva() === 'aliados'"
+        [class.text-white]="seccionActiva() === 'aliados'"
+        [class.dark:bg-white]="seccionActiva() === 'aliados'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'aliados'"
+        [class.text-neutral-700]="seccionActiva() !== 'aliados'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'aliados'"
+        class="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.08]">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+        </svg>
+        <span>Flota & Usuarios</span>
+        <span class="px-1.5 py-0.5 rounded-full bg-neutral-200 dark:bg-white/[0.15] text-[10px] font-bold text-neutral-800 dark:text-neutral-200">{{ usuarios().length }}</span>
+      </a>
+
+      <a
+        [routerLink]="['/admin', 'catalogo']"
+        [class.bg-neutral-900]="seccionActiva() === 'catalogo'"
+        [class.text-white]="seccionActiva() === 'catalogo'"
+        [class.dark:bg-white]="seccionActiva() === 'catalogo'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'catalogo'"
+        [class.text-neutral-700]="seccionActiva() !== 'catalogo'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'catalogo'"
+        class="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.08]">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+        </svg>
+        <span>Catálogo</span>
+      </a>
+
+      <a
+        [routerLink]="['/admin', 'ordenes']"
+        [class.bg-neutral-900]="seccionActiva() === 'ordenes'"
+        [class.text-white]="seccionActiva() === 'ordenes'"
+        [class.dark:bg-white]="seccionActiva() === 'ordenes'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'ordenes'"
+        [class.text-neutral-700]="seccionActiva() !== 'ordenes'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'ordenes'"
+        class="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.08]">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Órdenes & Escrow</span>
+        @if (pedidosDisputa().length > 0) {
+          <span class="px-1.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-bold">
+            {{ pedidosDisputa().length }}
+          </span>
+        }
+      </a>
+
+      <a
+        [routerLink]="['/admin', 'parametros']"
+        [class.bg-neutral-900]="seccionActiva() === 'parametros'"
+        [class.text-white]="seccionActiva() === 'parametros'"
+        [class.dark:bg-white]="seccionActiva() === 'parametros'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'parametros'"
+        [class.text-neutral-700]="seccionActiva() !== 'parametros'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'parametros'"
+        class="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.08]">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+        </svg>
+        <span>14 Parámetros</span>
+        <span class="px-1.5 py-0.5 rounded-full bg-neutral-200 dark:bg-white/[0.15] text-[10px] font-bold text-neutral-800 dark:text-neutral-200">{{ parametros().length }}</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Layout Principal: Menú Lateral Desktop + Área de Trabajo -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- Sidebar de Navegación Admin Desktop (Oculto en móvil, 3 columnas en Desktop) -->
+    <aside class="hidden lg:block lg:col-span-3 apple-card rounded-3xl p-3 shadow-sm space-y-1">
+      <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-300">
+        Módulos de Administración
+      </div>
+
+      <a
+        [routerLink]="['/admin', 'resumen']"
+        [class.bg-neutral-900]="seccionActiva() === 'resumen'"
+        [class.text-white]="seccionActiva() === 'resumen'"
+        [class.dark:bg-white]="seccionActiva() === 'resumen'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'resumen'"
+        [class.text-neutral-700]="seccionActiva() !== 'resumen'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'resumen'"
+        class="w-full px-3.5 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer">
+        <span class="flex items-center space-x-2.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
+          </svg>
+          <span>Resumen & KPIs</span>
+        </span>
+      </a>
+
+      <a
+        [routerLink]="['/admin', 'solicitudes']"
+        [class.bg-neutral-900]="seccionActiva() === 'solicitudes'"
+        [class.text-white]="seccionActiva() === 'solicitudes'"
+        [class.dark:bg-white]="seccionActiva() === 'solicitudes'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'solicitudes'"
+        [class.text-neutral-700]="seccionActiva() !== 'solicitudes'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'solicitudes'"
+        class="w-full px-3.5 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer">
+        <span class="flex items-center space-x-2.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Aprobación de Afiliados</span>
+        </span>
+        @if (totalSolicitudesPendientes() > 0) {
+          <span class="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">
+            {{ totalSolicitudesPendientes() }}
+          </span>
+        }
+      </a>
+
+      <a
+        [routerLink]="['/admin', 'aliados']"
+        [class.bg-neutral-900]="seccionActiva() === 'aliados'"
+        [class.text-white]="seccionActiva() === 'aliados'"
+        [class.dark:bg-white]="seccionActiva() === 'aliados'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'aliados'"
+        [class.text-neutral-700]="seccionActiva() !== 'aliados'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'aliados'"
+        class="w-full px-3.5 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer">
+        <span class="flex items-center space-x-2.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+          </svg>
+          <span>Tiendas, Flota & Usuarios</span>
+        </span>
+        <span class="text-[10px] px-2 py-0.5 rounded-full bg-neutral-200 dark:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 font-bold font-mono">{{ usuarios().length }}</span>
+      </a>
+
+      <a
+        [routerLink]="['/admin', 'catalogo']"
+        [class.bg-neutral-900]="seccionActiva() === 'catalogo'"
+        [class.text-white]="seccionActiva() === 'catalogo'"
+        [class.dark:bg-white]="seccionActiva() === 'catalogo'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'catalogo'"
+        [class.text-neutral-700]="seccionActiva() !== 'catalogo'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'catalogo'"
+        class="w-full px-3.5 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer">
+        <span class="flex items-center space-x-2.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+          </svg>
+          <span>Catálogo Maestro</span>
+        </span>
+      </a>
+
+      <a
+        [routerLink]="['/admin', 'ordenes']"
+        [class.bg-neutral-900]="seccionActiva() === 'ordenes'"
+        [class.text-white]="seccionActiva() === 'ordenes'"
+        [class.dark:bg-white]="seccionActiva() === 'ordenes'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'ordenes'"
+        [class.text-neutral-700]="seccionActiva() !== 'ordenes'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'ordenes'"
+        class="w-full px-3.5 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer">
+        <span class="flex items-center space-x-2.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Órdenes & Disputas Escrow</span>
+        </span>
+        @if (pedidosDisputa().length > 0) {
+          <span class="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-bold">
+            {{ pedidosDisputa().length }}
+          </span>
+        }
+      </a>
+
+      <a
+        [routerLink]="['/admin', 'parametros']"
+        [class.bg-neutral-900]="seccionActiva() === 'parametros'"
+        [class.text-white]="seccionActiva() === 'parametros'"
+        [class.dark:bg-white]="seccionActiva() === 'parametros'"
+        [class.dark:text-neutral-900]="seccionActiva() === 'parametros'"
+        [class.text-neutral-700]="seccionActiva() !== 'parametros'"
+        [class.dark:text-neutral-200]="seccionActiva() !== 'parametros'"
+        class="w-full px-3.5 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer">
+        <span class="flex items-center space-x-2.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+          </svg>
+          <span>14 Parámetros Dinámicos</span>
+        </span>
+        <span class="text-[10px] px-2 py-0.5 rounded-full bg-neutral-200 dark:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 font-bold font-mono">{{ parametros().length }}</span>
+      </a>
+    </aside>
+
+    <!-- Área Principal (9 columnas en Desktop) -->
+    <div class="lg:col-span-9 space-y-6">
+
+      <!-- ==================================================== -->
+      <!-- MÓDULO 1: RESUMEN EJECUTIVO & KPIS                   -->
+      <!-- ==================================================== -->
+      @if (seccionActiva() === 'resumen') {
+        <!-- Tarjetas KPI Financieras y Operativas -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="apple-card rounded-3xl p-5 shadow-sm space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-300">Volumen Transaccionado (GMV)</span>
+            <div class="text-2xl font-bold text-neutral-900 dark:text-white font-mono">Bs {{ gmvTotalBs().toFixed(2) }}</div>
+            <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">{{ pedidos().length }} órdenes registradas</p>
+          </div>
+
+          <div class="apple-card rounded-3xl p-5 shadow-sm space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-300">Fondos Retenidos en Escrow</span>
+            <div class="text-2xl font-bold text-[#0071E3] dark:text-[#3898EC] font-mono">Bs {{ custodiaEscrowBs().toFixed(2) }}</div>
+            <p class="text-[11px] text-neutral-600 dark:text-neutral-300">Liberación con PIN de 4 dígitos</p>
+          </div>
+
+          <div class="apple-card rounded-3xl p-5 shadow-sm space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-300">Ingresos Netos TuAuto</span>
+            <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-mono">Bs {{ ingresosPlataformaBs().toFixed(2) }}</div>
+            <p class="text-[11px] text-neutral-600 dark:text-neutral-300">Comisiones + Uso App (Bs 2)</p>
+          </div>
+
+          <div class="apple-card rounded-3xl p-5 shadow-sm space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-300">Solicitudes de Afiliación</span>
+            <div class="text-2xl font-bold text-amber-600 dark:text-amber-400 font-mono">{{ totalSolicitudesPendientes() }}</div>
+            <button (click)="seccionActiva.set('solicitudes')" class="text-[11px] text-[#0071E3] dark:text-[#3898EC] font-semibold hover:underline">
+              Revisar expedientes →
+            </button>
+          </div>
+        </div>
+
+        <!-- Bandeja Rápida de Solicitudes Pendientes -->
+        <div class="apple-card rounded-3xl p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-base font-bold text-neutral-900 dark:text-white">Solicitudes Pendientes de Aprobación</h2>
+              <p class="text-xs text-neutral-600 dark:text-neutral-300">Tiendas repuesteras y repartidores que llenaron el formulario de registro y esperan alta administrativa.</p>
+            </div>
+            <button (click)="seccionActiva.set('solicitudes')" class="px-3.5 py-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200/80 dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+              Ver todas ({{ totalSolicitudesPendientes() }})
+            </button>
+          </div>
+
+          @if (totalSolicitudesPendientes() === 0) {
+            <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-white/[0.03] text-center text-xs text-neutral-600 dark:text-neutral-300 border border-neutral-100 dark:border-white/[0.06]">
+              Todas las solicitudes de vendedores y repartidores han sido atendidas.
+            </div>
+          } @else {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              @for (t of tiendasPendientes(); track t.id) {
+                <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex flex-col justify-between space-y-3">
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                      <span class="px-2 py-0.5 rounded-md bg-amber-500 text-white text-[10px] font-bold uppercase">Solicitud Tienda</span>
+                      <span class="text-[11px] font-mono text-neutral-700 dark:text-neutral-300 font-semibold">NIT: {{ t.nit || 'En validación' }}</span>
+                    </div>
+                    <h3 class="text-sm font-bold text-neutral-900 dark:text-white pt-1">{{ t.nombre }}</h3>
+                    <p class="text-xs text-neutral-700 dark:text-neutral-200">{{ t.direccion_escrita }} • Especialidad: {{ t.especialidad || 'Multimarca' }}</p>
+                    <p class="text-[11px] text-neutral-600 dark:text-neutral-300">Representante: {{ t.usuario?.nombre_completo }} ({{ t.usuario?.correo }})</p>
+                  </div>
+                  <div class="flex items-center space-x-2 pt-2 border-t border-amber-500/20">
+                    <button (click)="aprobarTienda(t)" class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm">
+                      Aprobar Tienda
+                    </button>
+                    <button (click)="rechazarTienda(t)" class="px-3 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+                      Rechazar
+                    </button>
+                  </div>
+                </div>
+              }
+
+              @for (r of repartidoresPendientes(); track r.id) {
+                <div class="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex flex-col justify-between space-y-3">
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                      <span class="px-2 py-0.5 rounded-md bg-[#0071E3] text-white text-[10px] font-bold uppercase">Solicitud Repartidor</span>
+                      <span class="text-[11px] font-mono text-neutral-700 dark:text-neutral-300 font-semibold">{{ r.tipo_vehiculo }} • {{ r.placa }}</span>
+                    </div>
+                    <h3 class="text-sm font-bold text-neutral-900 dark:text-white pt-1">{{ r.usuario?.nombre_completo }}</h3>
+                    <p class="text-xs text-neutral-700 dark:text-neutral-200">Capacidad: {{ r.capacidad_peso_min_kg }} kg a {{ r.capacidad_peso_max_kg }} kg • Máx: {{ r.tamano_maximo }}</p>
+                    <p class="text-[11px] text-neutral-600 dark:text-neutral-300">Licencia: {{ r.licencia_conducir || 'Cat. A/B' }} • Tel: {{ r.usuario?.telefono }}</p>
+                  </div>
+                  <div class="flex items-center space-x-2 pt-2 border-t border-blue-500/20">
+                    <button (click)="aprobarRepartidor(r)" class="flex-1 py-2 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-sm">
+                      Aprobar Repartidor
+                    </button>
+                    <button (click)="rechazarRepartidor(r)" class="px-3 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+                      Rechazar
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ==================================================== -->
+      <!-- MÓDULO 2: APROBACIÓN DE AFILIADOS (TIENDAS Y FLOTA)  -->
+      <!-- ==================================================== -->
+      @if (seccionActiva() === 'solicitudes') {
+        <div class="space-y-6">
+          <!-- Solicitudes de Tiendas -->
+          <div class="apple-card rounded-3xl p-6 shadow-sm space-y-4">
+            <div>
+              <h2 class="text-base font-bold text-neutral-900 dark:text-white">Solicitudes de Afiliación — Tiendas Repuesteras ({{ tiendasPendientes().length }})</h2>
+              <p class="text-xs text-neutral-600 dark:text-neutral-300">Verifica el NIT, ubicación física en Santa Cruz y plan comercial antes de activar la tienda en el catálogo público.</p>
+            </div>
+
+            @if (tiendasPendientes().length === 0) {
+              <div class="p-8 rounded-2xl bg-neutral-50 dark:bg-white/[0.03] text-center text-xs text-neutral-600 dark:text-neutral-300 border border-neutral-100 dark:border-white/[0.06]">
+                No existen solicitudes pendientes de tiendas repuesteras en este momento.
+              </div>
+            } @else {
+              <div class="space-y-3">
+                @for (t of tiendasPendientes(); track t.id) {
+                  <div class="p-5 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-200/80 dark:border-white/[0.08] flex flex-wrap items-center justify-between gap-4">
+                    <div class="space-y-1.5">
+                      <div class="flex items-center space-x-2">
+                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold">PENDIENTE DE APROBACIÓN</span>
+                        <span class="text-xs font-mono text-neutral-500 dark:text-neutral-400">NIT: {{ t.nit || 'Por verificar' }}</span>
+                        <span class="text-xs font-semibold text-[#0071E3]">Plan solicitado: {{ t.plan_suscripcion }}</span>
+                      </div>
+                      <h3 class="text-base font-bold text-neutral-900 dark:text-white">{{ t.nombre }}</h3>
+                      <p class="text-xs text-neutral-600 dark:text-neutral-300">Dirección: {{ t.direccion_escrita }} • Horario: {{ t.horario_atencion || 'Lun-Sáb 08:00 - 18:30' }}</p>
+                      <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                        Titular: <strong class="text-neutral-800 dark:text-neutral-200">{{ t.usuario?.nombre_completo }}</strong> • Correo: {{ t.usuario?.correo }} • Teléfono: {{ t.telefono }}
+                      </p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <button
+                        (click)="aprobarTienda(t)"
+                        class="active:scale-[0.98] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm">
+                        Aprobar y Activar Cuenta
+                      </button>
+                      <button
+                        (click)="rechazarTienda(t)"
+                        class="active:scale-[0.98] px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-semibold border border-rose-200 dark:border-rose-500/20">
+                        Rechazar
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Solicitudes de Repartidores -->
+          <div class="apple-card rounded-3xl p-6 shadow-sm space-y-4">
+            <div>
+              <h2 class="text-base font-bold text-neutral-900 dark:text-white">Solicitudes de Afiliación — Flota de Repartidores ({{ repartidoresPendientes().length }})</h2>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">Valida licencia de conducir, placa vehicular y capacidades de carga (kg y volumen) antes de habilitar al conductor.</p>
+            </div>
+
+            @if (repartidoresPendientes().length === 0) {
+              <div class="p-8 rounded-2xl bg-neutral-50 dark:bg-white/[0.03] text-center text-xs text-neutral-500 dark:text-neutral-400 border border-neutral-100 dark:border-white/[0.06]">
+                No existen solicitudes pendientes de repartidores en este momento.
+              </div>
+            } @else {
+              <div class="space-y-3">
+                @for (r of repartidoresPendientes(); track r.id) {
+                  <div class="p-5 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-200/80 dark:border-white/[0.08] flex flex-wrap items-center justify-between gap-4">
+                    <div class="space-y-1.5">
+                      <div class="flex items-center space-x-2">
+                        <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-[#0071E3] text-[10px] font-bold">FLOTA EN REVISIÓN</span>
+                        <span class="text-xs font-mono font-bold text-neutral-800 dark:text-neutral-200">{{ r.tipo_vehiculo }} • Placa {{ r.placa }}</span>
+                        <span class="text-xs text-neutral-500 dark:text-neutral-400">Licencia: {{ r.licencia_conducir || 'Vigente' }}</span>
+                      </div>
+                      <h3 class="text-base font-bold text-neutral-900 dark:text-white">{{ r.usuario?.nombre_completo }}</h3>
+                      <p class="text-xs text-neutral-600 dark:text-neutral-300">
+                        Capacidad declarada: <strong class="text-neutral-800 dark:text-neutral-200">{{ r.capacidad_peso_min_kg }} kg a {{ r.capacidad_peso_max_kg }} kg</strong> • Volumen máximo: <strong class="text-neutral-800 dark:text-neutral-200">{{ r.tamano_maximo }}</strong>
+                      </p>
+                      <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                        Correo: {{ r.usuario?.correo }} • Teléfono: {{ r.usuario?.telefono }}
+                      </p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <button
+                        (click)="aprobarRepartidor(r)"
+                        class="active:scale-[0.98] px-4 py-2.5 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-sm">
+                        Aprobar y Habilitar Flota
+                      </button>
+                      <button
+                        (click)="rechazarRepartidor(r)"
+                        class="active:scale-[0.98] px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-semibold border border-rose-200 dark:border-rose-500/20">
+                        Rechazar
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ==================================================== -->
+      <!-- MÓDULO 3: DIRECTORIO DE TIENDAS, FLOTA Y USUARIOS    -->
+      <!-- ==================================================== -->
+      @if (seccionActiva() === 'aliados') {
+        <div class="apple-card rounded-3xl p-6 shadow-sm space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-base font-bold text-neutral-900 dark:text-white">Directorio de Aliados & Cuentas de Usuario</h2>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">Administra planes de membresía de tiendas, capacidades de repartidores y estados de cuenta.</p>
+            </div>
+
+            <div class="inline-flex p-1 rounded-xl bg-neutral-100 dark:bg-white/[0.08]">
+              <button
+                (click)="subTabAliados.set('tiendas')"
+                [class.bg-white]="subTabAliados() === 'tiendas'"
+                [class.dark:bg-neutral-800]="subTabAliados() === 'tiendas'"
+                [class.shadow-sm]="subTabAliados() === 'tiendas'"
+                [class.text-neutral-900]="subTabAliados() === 'tiendas'"
+                [class.dark:text-white]="subTabAliados() === 'tiendas'"
+                [class.text-neutral-600]="subTabAliados() !== 'tiendas'"
+                [class.dark:text-neutral-400]="subTabAliados() !== 'tiendas'"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">
+                Tiendas ({{ tiendas().length }})
+              </button>
+              <button
+                (click)="subTabAliados.set('repartidores')"
+                [class.bg-white]="subTabAliados() === 'repartidores'"
+                [class.dark:bg-neutral-800]="subTabAliados() === 'repartidores'"
+                [class.shadow-sm]="subTabAliados() === 'repartidores'"
+                [class.text-neutral-900]="subTabAliados() === 'repartidores'"
+                [class.dark:text-white]="subTabAliados() === 'repartidores'"
+                [class.text-neutral-600]="subTabAliados() !== 'repartidores'"
+                [class.dark:text-neutral-400]="subTabAliados() !== 'repartidores'"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">
+                Repartidores ({{ repartidores().length }})
+              </button>
+              <button
+                (click)="subTabAliados.set('usuarios')"
+                [class.bg-white]="subTabAliados() === 'usuarios'"
+                [class.dark:bg-neutral-800]="subTabAliados() === 'usuarios'"
+                [class.shadow-sm]="subTabAliados() === 'usuarios'"
+                [class.text-neutral-900]="subTabAliados() === 'usuarios'"
+                [class.dark:text-white]="subTabAliados() === 'usuarios'"
+                [class.text-neutral-600]="subTabAliados() !== 'usuarios'"
+                [class.dark:text-neutral-400]="subTabAliados() !== 'usuarios'"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">
+                Usuarios ({{ usuarios().length }})
+              </button>
+            </div>
+          </div>
+
+          @if (subTabAliados() === 'tiendas') {
+            <div class="overflow-x-auto rounded-2xl border border-neutral-200/70 dark:border-white/[0.08]">
+              <table class="w-full min-w-[640px] text-left text-xs">
+                <thead class="bg-neutral-50 dark:bg-white/[0.06] text-neutral-600 dark:text-neutral-300 uppercase text-[10px] font-bold border-b border-neutral-200/70 dark:border-white/[0.08]">
+                  <tr>
+                    <th class="p-3">Tienda Repuestera</th>
+                    <th class="p-3">NIT / Dirección</th>
+                    <th class="p-3">Estado</th>
+                    <th class="p-3">Teléfono</th>
+                    <th class="p-3">Plan Comercial</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-100 dark:divide-white/[0.06]">
+                  @for (t of tiendas(); track t.id) {
+                    <tr class="hover:bg-neutral-50/70 dark:hover:bg-white/[0.03] transition-colors">
+                      <td class="p-3">
+                        <div class="font-bold text-neutral-900 dark:text-white">{{ t.nombre }}</div>
+                        <div class="text-[11px] text-neutral-500 dark:text-neutral-300 flex items-center space-x-1">
+                          <span>{{ t.usuario?.nombre_completo }} •</span>
+                          <app-icon name="star" size="xs" customClass="text-amber-500"></app-icon>
+                          <span>{{ t.calificacion }}</span>
+                        </div>
+                      </td>
+                      <td class="p-3 text-neutral-600 dark:text-neutral-300">
+                        <div class="font-mono text-[11px] font-semibold">NIT: {{ t.nit || 'N/A' }}</div>
+                        <div class="text-[11px] text-neutral-500 dark:text-neutral-300">{{ t.direccion_escrita }}</div>
+                      </td>
+                      <td class="p-3">
+                        @if (t.esta_verificada) {
+                          <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">VERIFICADA</span>
+                        } @else {
+                          <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">PENDIENTE</span>
+                        }
+                      </td>
+                      <td class="p-3 font-mono font-bold text-neutral-900 dark:text-white">{{ t.telefono }}</td>
+                      <td class="p-3 w-48">
+                        <app-select
+                          [options]="opcionesPlanTienda"
+                          [ngModel]="t.plan_suscripcion"
+                          (ngModelChange)="cambiarPlanTienda(t.id, $event)">
+                        </app-select>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          @if (subTabAliados() === 'repartidores') {
+            <div class="overflow-x-auto rounded-2xl border border-neutral-200/70 dark:border-white/[0.08]">
+              <table class="w-full min-w-[680px] text-left text-xs">
+                <thead class="bg-neutral-50 dark:bg-white/[0.06] text-neutral-600 dark:text-neutral-300 uppercase text-[10px] font-bold border-b border-neutral-200/70 dark:border-white/[0.08]">
+                  <tr>
+                    <th class="p-3">Conductor</th>
+                    <th class="p-3">Vehículo & Placa</th>
+                    <th class="p-3">Rango de Peso (kg)</th>
+                    <th class="p-3">Tamaño Máx.</th>
+                    <th class="p-3">Verificación</th>
+                    <th class="p-3">Disponibilidad</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-100 dark:divide-white/[0.06]">
+                  @for (r of repartidores(); track r.id) {
+                    <tr class="hover:bg-neutral-50/70 dark:hover:bg-white/[0.03] transition-colors">
+                      <td class="p-3">
+                        <div class="font-bold text-neutral-900 dark:text-white">{{ r.usuario?.nombre_completo }}</div>
+                        <div class="text-[11px] text-neutral-500 dark:text-neutral-300">{{ r.usuario?.telefono }} • Lic: {{ r.licencia_conducir || 'Cat A' }}</div>
+                      </td>
+                      <td class="p-3 font-mono">
+                        <span class="font-bold text-neutral-900 dark:text-white">{{ r.tipo_vehiculo }}</span> • <span class="text-neutral-600 dark:text-neutral-300">{{ r.placa }}</span>
+                      </td>
+                      <td class="p-3 font-mono text-neutral-700 dark:text-neutral-300">{{ r.capacidad_peso_min_kg }} kg — {{ r.capacidad_peso_max_kg }} kg</td>
+                      <td class="p-3">
+                        <span class="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-white/[0.08] text-neutral-800 dark:text-neutral-200 text-[10px] font-bold font-mono">{{ r.tamano_maximo }}</span>
+                      </td>
+                      <td class="p-3">
+                        @if (r.esta_verificado) {
+                          <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">HABILITADO</span>
+                        } @else {
+                          <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">EN REVISIÓN</span>
+                        }
+                      </td>
+                      <td class="p-3 font-mono font-bold text-emerald-600 dark:text-emerald-400">{{ r.esta_activo ? 'En línea' : 'Fuera de turno' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          @if (subTabAliados() === 'usuarios') {
+            <div class="overflow-x-auto rounded-2xl border border-neutral-200/70 dark:border-white/[0.08]">
+              <table class="w-full min-w-[640px] text-left text-xs">
+                <thead class="bg-neutral-50 dark:bg-white/[0.06] text-neutral-600 dark:text-neutral-300 uppercase text-[10px] font-bold border-b border-neutral-200/70 dark:border-white/[0.08]">
+                  <tr>
+                    <th class="p-3">Nombre Completo</th>
+                    <th class="p-3">Correo / Teléfono</th>
+                    <th class="p-3">Rol Asignado</th>
+                    <th class="p-3">Estado de Cuenta</th>
+                    <th class="p-3 text-right">Control de Acceso</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-100 dark:divide-white/[0.06]">
+                  @for (u of usuarios(); track u.id) {
+                    <tr class="hover:bg-neutral-50/70 dark:hover:bg-white/[0.03] transition-colors">
+                      <td class="p-3 font-bold text-neutral-900 dark:text-white">{{ u.nombre_completo }}</td>
+                      <td class="p-3 text-neutral-600 dark:text-neutral-300">
+                        <div>{{ u.correo }}</div>
+                        <div class="text-[11px] text-neutral-500 dark:text-neutral-300">{{ u.telefono }}</div>
+                      </td>
+                      <td class="p-3">
+                        <span class="px-2.5 py-0.5 rounded-full bg-blue-500/10 text-[#0071E3] dark:text-[#3898EC] text-[10px] font-bold">
+                          {{ obtenerRolNombre(u) }}
+                        </span>
+                      </td>
+                      <td class="p-3">
+                        <span
+                          [class.bg-emerald-500/10]="u.estado_cuenta === 'ACTIVO'"
+                          [class.text-emerald-600]="u.estado_cuenta === 'ACTIVO'"
+                          [class.dark:text-emerald-400]="u.estado_cuenta === 'ACTIVO'"
+                          [class.bg-amber-500/10]="u.estado_cuenta === 'PENDIENTE_APROBACION'"
+                          [class.text-amber-600]="u.estado_cuenta === 'PENDIENTE_APROBACION'"
+                          [class.dark:text-amber-400]="u.estado_cuenta === 'PENDIENTE_APROBACION'"
+                          [class.bg-rose-500/10]="u.estado_cuenta === 'RECHAZADO'"
+                          [class.text-rose-600]="u.estado_cuenta === 'RECHAZADO'"
+                          [class.dark:text-rose-400]="u.estado_cuenta === 'RECHAZADO'"
+                          class="px-2.5 py-0.5 rounded-full text-[10px] font-bold">
+                          {{ u.estado_cuenta || 'ACTIVO' }}
+                        </span>
+                      </td>
+                      <td class="p-3 text-right w-44">
+                        <app-select
+                          [options]="opcionesEstadoUsuario"
+                          [ngModel]="u.estado_cuenta || 'ACTIVO'"
+                          (ngModelChange)="cambiarEstadoUsuario(u, $event)">
+                        </app-select>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ==================================================== -->
+      <!-- MÓDULO 4: CATÁLOGO MAESTRO AUTOMOTRIZ                -->
+      <!-- ==================================================== -->
+      @if (seccionActiva() === 'catalogo') {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <!-- Categorías -->
+          <div class="apple-card rounded-3xl p-5 shadow-sm space-y-4">
+            <div>
+              <h3 class="text-sm font-bold text-neutral-900 dark:text-white">Categorías ({{ categorias().length }})</h3>
+              <p class="text-[11px] text-neutral-600 dark:text-neutral-300">Usadas para filtrar con SQL indexado.</p>
+            </div>
+            <div class="space-y-2">
+              <input
+                type="text"
+                [ngModel]="nuevaCategoriaNombre()"
+                (ngModelChange)="nuevaCategoriaNombre.set($event)"
+                placeholder="Ej. Refrigeración y Radiadores"
+                class="w-full px-3 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-400 text-xs focus:outline-none focus:ring-1 focus:ring-[#0071E3]"
+              />
+              <button
+                (click)="crearCategoria()"
+                class="w-full py-2 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-sm transition-all">
+                + Crear Categoría
+              </button>
+            </div>
+            <div class="space-y-1.5 max-h-64 overflow-y-auto pt-2 border-t border-neutral-100 dark:border-white/[0.08]">
+              @for (c of categorias(); track c.id) {
+                <div class="px-3 py-2 rounded-xl bg-neutral-50 dark:bg-white/[0.04] text-xs font-medium text-neutral-800 dark:text-neutral-200 flex justify-between border border-black/[0.04] dark:border-white/[0.06]">
+                  <span>{{ c.nombre }}</span>
+                  <span class="font-mono text-[10px] text-neutral-500 dark:text-neutral-300">ID #{{ c.id }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Marcas Vehiculares -->
+          <div class="apple-card rounded-3xl p-5 shadow-sm space-y-4">
+            <div>
+              <h3 class="text-sm font-bold text-neutral-900 dark:text-white">Marcas de Vehículos ({{ marcas().length }})</h3>
+              <p class="text-[11px] text-neutral-600 dark:text-neutral-300">Disponibles en el selector Mi Garaje.</p>
+            </div>
+            <div class="space-y-2">
+              <input
+                type="text"
+                [ngModel]="nuevaMarcaNombre()"
+                (ngModelChange)="nuevaMarcaNombre.set($event)"
+                placeholder="Ej. Mitsubishi, Mazda..."
+                class="w-full px-3 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-400 text-xs focus:outline-none focus:ring-1 focus:ring-[#0071E3]"
+              />
+              <button
+                (click)="crearMarca()"
+                class="w-full py-2 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-sm transition-all">
+                + Agregar Marca
+              </button>
+            </div>
+            <div class="space-y-1.5 max-h-64 overflow-y-auto pt-2 border-t border-neutral-100 dark:border-white/[0.08]">
+              @for (m of marcas(); track m.id) {
+                <div class="px-3 py-2 rounded-xl bg-neutral-50 dark:bg-white/[0.04] text-xs font-medium text-neutral-800 dark:text-neutral-200 flex items-center justify-between border border-black/[0.04] dark:border-white/[0.06]">
+                  <span>{{ m.nombre }}</span>
+                  <span class="font-mono text-[10px] text-neutral-500 dark:text-neutral-300">ID #{{ m.id }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Fabricantes de Autopartes -->
+          <div class="apple-card rounded-3xl p-5 shadow-sm space-y-4">
+            <div>
+              <h3 class="text-sm font-bold text-neutral-900 dark:text-white">Fabricantes OEM ({{ fabricantes().length }})</h3>
+              <p class="text-[11px] text-neutral-600 dark:text-neutral-300">Certificación de marcas de autopartes.</p>
+            </div>
+            <div class="space-y-2">
+              <input
+                type="text"
+                [ngModel]="nuevoFabricanteNombre()"
+                (ngModelChange)="nuevoFabricanteNombre.set($event)"
+                placeholder="Ej. Aisin, Bosch, Valeo..."
+                class="w-full px-3 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-400 text-xs focus:outline-none focus:ring-1 focus:ring-[#0071E3]"
+              />
+              <input
+                type="text"
+                [ngModel]="nuevoFabricanteOrigen()"
+                (ngModelChange)="nuevoFabricanteOrigen.set($event)"
+                placeholder="País de origen (ej. Japón, Alemania)"
+                class="w-full px-3 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-400 text-xs focus:outline-none focus:ring-1 focus:ring-[#0071E3]"
+              />
+              <button
+                (click)="crearFabricante()"
+                class="w-full py-2 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-sm transition-all">
+                + Registrar Fabricante
+              </button>
+            </div>
+            <div class="space-y-1.5 max-h-64 overflow-y-auto pt-2 border-t border-neutral-100 dark:border-white/[0.08]">
+              @for (f of fabricantes(); track f.id) {
+                <div class="px-3 py-2 rounded-xl bg-neutral-50 dark:bg-white/[0.04] text-xs font-medium text-neutral-800 dark:text-neutral-200 flex justify-between border border-black/[0.04] dark:border-white/[0.06]">
+                  <span>{{ f.nombre }}{{ f.pais_origen ? ' (' + f.pais_origen + ')' : '' }}</span>
+                  <span class="text-[10px] font-bold text-[#0071E3] dark:text-[#3898EC]">OEM / Certificado</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ==================================================== -->
+      <!-- MÓDULO 5: ÓRDENES GLOBALES & ARBITRAJE ESCROW        -->
+      <!-- ==================================================== -->
+      @if (seccionActiva() === 'ordenes') {
+        <div class="apple-card rounded-3xl p-6 shadow-sm space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-base font-bold text-neutral-900 dark:text-white">Monitoreo Global de Órdenes & Custodia Escrow</h2>
+              <p class="text-xs text-neutral-600 dark:text-neutral-300">Auditoría en tiempo real de pagos, comisiones, entregas con PIN y arbitraje de disputas.</p>
+            </div>
+
+            <div class="w-64">
+              <app-select
+                [options]="opcionesFiltroOrden()"
+                [ngModel]="filtroEstadoOrden()"
+                (ngModelChange)="filtroEstadoOrden.set($event)">
+              </app-select>
+            </div>
+          </div>
+
+          @if (pedidosFiltrados().length === 0) {
+            <div class="p-8 rounded-2xl bg-neutral-50 dark:bg-white/[0.03] text-center text-xs text-neutral-600 dark:text-neutral-300 border border-neutral-100 dark:border-white/[0.06]">
+              No hay órdenes con el filtro seleccionado.
+            </div>
+          } @else {
+            <div class="space-y-3">
+              @for (ped of pedidosFiltrados(); track ped.id) {
+                <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-white/[0.03] border border-neutral-200/80 dark:border-white/[0.08] flex flex-wrap items-center justify-between gap-4 text-xs">
+                  <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                      <span class="font-mono font-bold text-neutral-900 dark:text-white">{{ ped.numero_orden }}</span>
+                      <span
+                        [class.bg-blue-500/10]="ped.estado === 'PAGADO_ESCROW'"
+                        [class.text-[#0071E3]]="ped.estado === 'PAGADO_ESCROW'"
+                        [class.dark:text-[#3898EC]]="ped.estado === 'PAGADO_ESCROW'"
+                        [class.bg-emerald-500/10]="ped.estado === 'ENTREGADO'"
+                        [class.text-emerald-600]="ped.estado === 'ENTREGADO'"
+                        [class.dark:text-emerald-400]="ped.estado === 'ENTREGADO'"
+                        [class.bg-rose-500/10]="ped.estado === 'DISPUTA'"
+                        [class.text-rose-600]="ped.estado === 'DISPUTA'"
+                        [class.dark:text-rose-400]="ped.estado === 'DISPUTA'"
+                        class="px-2.5 py-0.5 rounded-full text-[10px] font-bold">
+                        {{ ped.estado }}
+                      </span>
+                      <span class="font-mono text-[11px] text-neutral-600 dark:text-neutral-300">PIN: {{ ped.pin_entrega }}</span>
+                    </div>
+                    <div class="font-semibold text-neutral-900 dark:text-white">{{ ped.repuesto?.titulo }}</div>
+                    <div class="text-[11px] text-neutral-600 dark:text-neutral-300">
+                      Tienda: {{ ped.tienda?.nombre }} • Comprador: {{ ped.usuario_comprador?.nombre_completo }}
+                    </div>
+                    @if (ped.motivo_disputa) {
+                      <div class="text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-500/20 mt-1">
+                        Motivo de reclamo: "{{ ped.motivo_disputa }}"
+                      </div>
+                    }
+                  </div>
+
+                  <div class="text-right space-y-1">
+                    <div class="text-sm font-bold text-neutral-900 dark:text-white font-mono">Total: Bs {{ ped.total_bs.toFixed(2) }}</div>
+                    <div class="text-[11px] text-neutral-600 dark:text-neutral-300">
+                      Comisión tienda: Bs {{ (ped.comision_tuauto_bs || 0).toFixed(2) }} • Uso App: Bs {{ (ped.tarifa_servicio_app_bs || 2).toFixed(2) }}
+                    </div>
+                    @if (ped.estado === 'DISPUTA') {
+                      <button
+                        (click)="resolverReembolso(ped.id)"
+                        class="mt-1 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-semibold shadow-sm">
+                        Ejecutar Reembolso al Comprador
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ==================================================== -->
+      <!-- MÓDULO 6: LOS 14 PARÁMETROS DINÁMICOS DEL SISTEMA    -->
+      <!-- ==================================================== -->
+      @if (seccionActiva() === 'parametros') {
+        <div class="apple-card rounded-3xl p-6 shadow-sm space-y-4">
+          <div>
+            <h2 class="text-base font-bold tracking-tight text-neutral-900 dark:text-white">Los 14 Parámetros Dinámicos del Negocio</h2>
+            <p class="text-xs text-neutral-600 dark:text-neutral-300">Modifica comisiones, tarifas de envío, tarifa de uso del comprador (2 Bs) y reglas de custodia sin tocar el código fuente.</p>
+          </div>
+
+          <div class="overflow-x-auto rounded-2xl border border-neutral-200/70 dark:border-white/[0.08]">
+            <table class="w-full min-w-[680px] text-left text-xs">
+              <thead class="bg-neutral-50 dark:bg-white/[0.06] text-neutral-600 dark:text-neutral-300 uppercase text-[10px] font-bold tracking-wider border-b border-neutral-200/70 dark:border-white/[0.08]">
+                <tr>
+                  <th class="p-3">Parámetro / Clave</th>
+                  <th class="p-3">Descripción de Regla de Negocio</th>
+                  <th class="p-3">Tipo</th>
+                  <th class="p-3">Valor Actual</th>
+                  <th class="p-3 text-right">Acción</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-neutral-100 dark:divide-white/[0.06]">
+                @for (param of parametros(); track param.id) {
+                  <tr class="hover:bg-neutral-50/60 dark:hover:bg-white/[0.03] transition-colors">
+                    <td class="p-3 font-semibold text-neutral-900 dark:text-white">
+                      <div>{{ param.nombre_parametro }}</div>
+                      <code class="text-[10px] text-[#0071E3] dark:text-[#3898EC] font-mono font-normal">{{ param.clave }}</code>
+                    </td>
+                    <td class="p-3 text-neutral-700 dark:text-neutral-200 max-w-xs">{{ param.descripcion }}</td>
+                    <td class="p-3">
+                      <span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/[0.08] text-[10px] font-medium text-neutral-700 dark:text-neutral-200 font-mono">{{ param.tipo_dato }}</span>
+                    </td>
+                    <td class="p-3 font-bold text-sm text-neutral-900 dark:text-white font-mono">
+                      @if (parametroEditando()?.clave === param.clave) {
+                        <input 
+                          type="text" 
+                          [(ngModel)]="parametroEditando()!.valor"
+                          class="px-2 py-1 rounded-lg border border-[#0071E3] bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-xs font-bold w-28 focus:outline-none focus:ring-1 focus:ring-[#0071E3]"
+                        />
+                      } @else {
+                        {{ param.valor }}
+                      }
+                    </td>
+                    <td class="p-3 text-right">
+                      @if (parametroEditando()?.clave === param.clave) {
+                        <div class="inline-flex space-x-1">
+                          <button 
+                            (click)="guardarParametro(param.clave, parametroEditando()!.valor)"
+                            class="active:scale-[0.98] transition-all px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-sm">
+                            Guardar
+                          </button>
+                          <button 
+                            (click)="parametroEditando.set(null)"
+                            class="px-2 py-1 rounded-lg bg-neutral-100 dark:bg-white/[0.08] text-neutral-700 dark:text-neutral-200 text-xs">
+                            ✕
+                          </button>
+                        </div>
+                      } @else {
+                        <button 
+                          (click)="parametroEditando.set({ clave: param.clave, valor: param.valor })"
+                          class="active:scale-[0.98] transition-all px-3 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200/80 dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+                          Editar
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+    </div>
+
+  </div>
+
+</div>

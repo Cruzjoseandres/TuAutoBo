@@ -1,0 +1,874 @@
+<div class="relative min-h-[90vh] flex flex-col justify-center items-center px-4 py-8">
+
+  <!-- Botón Flotante para Alternar Modo Claro / Oscuro -->
+  <div class="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+    <button 
+      type="button"
+      (click)="theme.toggleTheme()"
+      [title]="theme.isDarkMode() ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'"
+      class="active:scale-95 transition-all px-3 py-1.5 rounded-full bg-black/[0.05] dark:bg-white/[0.1] hover:bg-black/[0.1] dark:hover:bg-white/[0.15] text-neutral-800 dark:text-neutral-200 border border-black/[0.08] dark:border-white/[0.12] shadow-sm flex items-center space-x-2 text-xs font-medium">
+      @if (theme.isDarkMode()) {
+        <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+        </svg>
+        <span>Modo Claro</span>
+      } @else {
+        <svg class="w-4 h-4 text-neutral-600 dark:text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+        </svg>
+        <span>Modo Oscuro</span>
+      }
+    </button>
+  </div>
+
+  <div class="w-full max-w-xl space-y-6">
+
+    <!-- Encabezado estilo Apple -->
+    <div class="text-center space-y-2.5">
+      <div class="w-12 h-12 mx-auto rounded-2xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 flex items-center justify-center shadow-lg transition-colors">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+        </svg>
+      </div>
+
+      @if (modoRegistro() === 'comprador') {
+        <h1 class="text-2xl font-extrabold tracking-tight text-neutral-900 dark:text-white transition-colors">
+          Crear Cuenta en Tu<span class="text-[#0071E3]">Auto</span>
+        </h1>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 max-w-md mx-auto leading-relaxed">
+          Encuentra repuestos garantizados para tu vehículo en Santa Cruz, chatea con mecánicos y compra con custodia Escrow.
+        </p>
+      } @else {
+        <div class="space-y-1">
+          <h1 class="text-2xl font-extrabold tracking-tight text-neutral-900 dark:text-white transition-colors">
+            Postulación de Socios Comerciales
+          </h1>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 max-w-md mx-auto leading-relaxed">
+            Forma parte de la red oficial de TuAuto en Santa Cruz como tienda de repuestos, taller mecánico o repartidor logístico.
+          </p>
+        </div>
+      }
+    </div>
+
+    <!-- PANTALLA DE CONFIRMACIÓN DE SOLICITUD ENVIADA (SOLO ALIADOS) -->
+    @if (solicitudEnviada()) {
+      <div class="apple-card rounded-3xl p-8 shadow-2xl text-center space-y-5 animate-scale-pop">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+
+        <div class="space-y-2">
+          <h2 class="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">
+            Solicitud de Afiliación Recibida
+          </h2>
+          <p class="text-xs text-neutral-600 dark:text-neutral-300 max-w-md mx-auto leading-relaxed">
+            Tu cuenta ha entrado en proceso de validación. Nuestro equipo verificará la información y te contactará vía WhatsApp al <strong>{{ telefono() }}</strong> y correo electrónico para habilitar tu acceso al panel.
+          </p>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-white/[0.05] border border-black/[0.04] dark:border-white/[0.08] text-left text-xs space-y-1.5 max-w-md mx-auto">
+          <div class="flex justify-between">
+            <span class="text-neutral-500 dark:text-neutral-400">Titular registrado:</span>
+            <span class="font-semibold text-neutral-900 dark:text-white">{{ nombreCompleto() }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-neutral-500 dark:text-neutral-400">Correo de acceso:</span>
+            <span class="font-mono text-neutral-900 dark:text-white">{{ correo() }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-neutral-500 dark:text-neutral-400">Tipo de Afiliación:</span>
+            <span class="font-semibold text-[#0071E3]">{{ tipoAliado() === 'VENDEDOR' ? (tipoEstablecimiento() === 'TALLER_MECANICO' ? 'Taller Mecánico' : 'Tienda Repuestera') : 'Repartidor Logístico' }}</span>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-center space-x-3">
+          <a
+            routerLink="/login"
+            class="active:scale-[0.98] transition-all px-6 py-2.5 rounded-xl bg-neutral-900 hover:bg-black dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-semibold shadow-sm">
+            Ir a Iniciar Sesión
+          </a>
+        </div>
+      </div>
+    } @else {
+
+      <!-- TARJETA PRINCIPAL DEL FORMULARIO -->
+      <div class="apple-card rounded-3xl p-7 shadow-2xl space-y-5">
+
+        <!-- MENSAJE DE ERROR GENERAL SUPERIOR (SOLO PARA ERRORES DE SERVIDOR / RED / CONFLICTO) -->
+        @if (errorGeneral()) {
+          <div class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium flex items-center space-x-2 animate-fadeIn">
+            <svg class="w-4 h-4 flex-shrink-0 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            <span>{{ errorGeneral() }}</span>
+          </div>
+        }
+
+        <!-- ========================================== -->
+        <!-- MODO 1: REGISTRO NORMAL PARA COMPRADORES   -->
+        <!-- ========================================== -->
+        @if (modoRegistro() === 'comprador') {
+          <div class="space-y-1 border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
+            <h2 class="text-base font-bold text-neutral-900 dark:text-white">Datos de la Cuenta</h2>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Ingresa tus datos para acceder inmediatamente al catálogo.</p>
+          </div>
+
+          <form (submit)="registrarComprador(); $event.preventDefault()" novalidate class="space-y-4 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              
+              <!-- Campo: Nombre Completo -->
+              <div class="space-y-1.5">
+                <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">
+                  Nombre Completo <span class="text-rose-500 font-bold ml-0.5">*</span>
+                </label>
+                <input
+                  type="text"
+                  [ngModel]="nombreCompleto()"
+                  (ngModelChange)="onNombreChange($event)"
+                  name="nombreCompleto"
+                  placeholder="ej. Marco Antonio Soliz"
+                  [class.!border-rose-500]="!!errorNombre()"
+                  [class.focus:!ring-rose-500/30]="!!errorNombre()"
+                  [class.bg-rose-500/[0.03]]="!!errorNombre()"
+                  class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all"
+                />
+                @if (errorNombre()) {
+                  <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                    <span>{{ errorNombre() }}</span>
+                  </p>
+                }
+              </div>
+
+              <!-- Campo: Teléfono Celular -->
+              <div class="space-y-1.5">
+                <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">
+                  Teléfono <span class="text-rose-500 font-bold ml-0.5">*</span>
+                </label>
+                <div class="relative flex items-center">
+                  <div class="absolute left-3.5 flex items-center space-x-2 pointer-events-none select-none text-neutral-400 dark:text-neutral-400 font-semibold text-xs">
+                    <span>+591</span>
+                    <span class="h-4 w-[1px] bg-neutral-300 dark:bg-neutral-700"></span>
+                  </div>
+                  <input
+                    type="tel"
+                    inputmode="numeric"
+                    maxlength="8"
+                    [value]="numeroCelular()"
+                    (input)="onNumeroCelularInput($event)"
+                    name="telefono"
+                    placeholder="76012345"
+                    [class.!border-rose-500]="!!errorTelefono()"
+                    [class.focus:!ring-rose-500/30]="!!errorTelefono()"
+                    [class.bg-rose-500/[0.03]]="!!errorTelefono()"
+                    class="w-full pl-16 pr-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all"
+                  />
+                </div>
+                @if (errorTelefono()) {
+                  <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                    <span>{{ errorTelefono() }}</span>
+                  </p>
+                }
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              
+              <!-- Campo: Correo Electrónico -->
+              <div class="space-y-1.5">
+                <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">
+                  Correo Electrónico <span class="text-rose-500 font-bold ml-0.5">*</span>
+                </label>
+                <input
+                  type="email"
+                  [ngModel]="correo()"
+                  (ngModelChange)="onCorreoChange($event)"
+                  name="correo"
+                  placeholder="marco@gmail.com"
+                  [class.!border-rose-500]="!!errorCorreo()"
+                  [class.focus:!ring-rose-500/30]="!!errorCorreo()"
+                  [class.bg-rose-500/[0.03]]="!!errorCorreo()"
+                  class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all"
+                />
+                @if (errorCorreo()) {
+                  <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                    <span>{{ errorCorreo() }}</span>
+                  </p>
+                }
+              </div>
+
+              <!-- Campo: Contraseña -->
+              <div class="space-y-1.5">
+                <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">
+                  Contraseña <span class="text-rose-500 font-bold ml-0.5">*</span>
+                </label>
+                <input
+                  type="password"
+                  [ngModel]="clave()"
+                  (ngModelChange)="onClaveChange($event)"
+                  name="clave"
+                  placeholder="Mínimo 6 caracteres"
+                  [class.!border-rose-500]="!!errorClave()"
+                  [class.focus:!ring-rose-500/30]="!!errorClave()"
+                  [class.bg-rose-500/[0.03]]="!!errorClave()"
+                  class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all"
+                />
+                @if (errorClave()) {
+                  <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                    <span>{{ errorClave() }}</span>
+                  </p>
+                }
+              </div>
+            </div>
+
+            <!-- Botón Principal Crear Cuenta -->
+            <button
+              type="submit"
+              [disabled]="cargando()"
+              class="active:scale-[0.98] transition-all w-full py-3 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white font-bold shadow-md flex items-center justify-center space-x-2">
+              <span>{{ cargando() ? 'Creando cuenta...' : 'Crear Cuenta' }}</span>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </button>
+          </form>
+
+          <!-- BANNER / LINK "¿QUIERES TRABAJAR CON NOSOTROS?" -->
+          <div class="pt-3 border-t border-black/[0.06] dark:border-white/[0.08]">
+            <div class="p-4 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="space-y-0.5">
+                <div class="flex items-center space-x-1.5">
+                  <svg class="w-4 h-4 text-[#0071E3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
+                  </svg>
+                  <span class="font-bold text-xs text-neutral-900 dark:text-white">¿Quieres trabajar con nosotros?</span>
+                </div>
+                <p class="text-[11px] text-neutral-500 dark:text-neutral-400">
+                  ¿Tienes una tienda repuestera, un taller mecánico o un vehículo para repartos en Santa Cruz?
+                </p>
+              </div>
+
+              <button
+                type="button"
+                (click)="activarModoAliado('VENDEDOR')"
+                class="active:scale-[0.98] transition-all px-4 py-2 rounded-xl bg-neutral-900 hover:bg-black dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-bold shadow-sm whitespace-nowrap flex items-center justify-center space-x-1.5 self-start sm:self-center">
+                <span>Postular como Socio</span>
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ======================================================= -->
+        <!-- MODO 2: AFILIACIÓN PARA SOCIOS (VENDEDOR O REPARTIDOR) -->
+        <!-- ======================================================= -->
+        @if (modoRegistro() === 'aliado') {
+          <div class="space-y-4">
+
+            <!-- Botón Volver a Registro de Comprador -->
+            <div class="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
+              <button
+                type="button"
+                (click)="activarModoComprador()"
+                class="active:scale-[0.98] inline-flex items-center space-x-1.5 text-xs font-semibold text-[#0071E3] hover:underline">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                <span>Volver al registro de comprador</span>
+              </button>
+            </div>
+
+            <!-- Selector de Rol de Postulación: Tienda/Taller vs Repartidor -->
+            <div class="space-y-1.5">
+              <label class="text-xs font-bold text-neutral-900 dark:text-white block">Elige tu rol de postulación:</label>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  (click)="tipoAliado.set('VENDEDOR')"
+                  [class.ring-2]="tipoAliado() === 'VENDEDOR'"
+                  [class.ring-[#0071E3]]="tipoAliado() === 'VENDEDOR'"
+                  [class.bg-blue-500/10]="tipoAliado() === 'VENDEDOR'"
+                  class="p-3.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] text-left space-y-1 transition-all">
+                  <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-blue-500/15 text-[#0071E3] flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.651V9.35m0 0a3.001 3.001 0 003.75-.614A2.996 2.996 0 009.75 9.35c.82 0 1.58-.33 2.14-.863a3.002 3.002 0 004.22 0c.56.533 1.32.863 2.14.863a2.996 2.996 0 002.36-.614 3.001 3.001 0 003.75.614M3.75 9.35V4.875c0-.621.504-1.125 1.125-1.125h14.25c.621 0 1.125.504 1.125 1.125v4.474" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="text-xs font-bold text-neutral-900 dark:text-white">Tienda o Taller Mecánico</div>
+                      <div class="text-[10px] text-neutral-500 dark:text-neutral-400">Venta de repuestos o servicios de instalación</div>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="tipoAliado.set('REPARTIDOR')"
+                  [class.ring-2]="tipoAliado() === 'REPARTIDOR'"
+                  [class.ring-[#0071E3]]="tipoAliado() === 'REPARTIDOR'"
+                  [class.bg-blue-500/10]="tipoAliado() === 'REPARTIDOR'"
+                  class="p-3.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] text-left space-y-1 transition-all">
+                  <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-500 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.25H4.125C3.504 7.5 3 8.004 3 8.625V14.25m11.25-6.75v6.75" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="text-xs font-bold text-neutral-900 dark:text-white">Repartidor Logístico</div>
+                      <div class="text-[10px] text-neutral-500 dark:text-neutral-400">Entregas express en motocicleta, torito o auto</div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Formulario de Postulación de Socios -->
+            <form (submit)="enviarSolicitudAliado(); $event.preventDefault()" novalidate class="space-y-4 text-xs pt-1">
+              
+              <!-- 1. Datos Personales del Titular -->
+              <div class="space-y-2.5">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 block">1. Datos del Titular o Representante</span>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <!-- Nombre del Titular -->
+                  <div class="space-y-1">
+                    <label class="font-medium text-neutral-700 dark:text-neutral-300 block">
+                      Nombre Completo del Titular <span class="text-rose-500 font-bold ml-0.5">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      [ngModel]="nombreCompleto()" 
+                      (ngModelChange)="onNombreChange($event)"
+                      name="nomTitular" 
+                      placeholder="ej. Fernando Chávez" 
+                      [class.!border-rose-500]="!!errorNombre()"
+                      [class.focus:!ring-rose-500/30]="!!errorNombre()"
+                      [class.bg-rose-500/[0.03]]="!!errorNombre()"
+                      class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white transition-all" 
+                    />
+                    @if (errorNombre()) {
+                      <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                        </svg>
+                        <span>{{ errorNombre() }}</span>
+                      </p>
+                    }
+                  </div>
+
+                  <!-- Teléfono del Titular -->
+                  <div class="space-y-1">
+                    <label class="font-medium text-neutral-700 dark:text-neutral-300 block">
+                      Teléfono Celular (WhatsApp) <span class="text-rose-500 font-bold ml-0.5">*</span>
+                    </label>
+                    <div class="relative flex items-center">
+                      <div class="absolute left-3.5 flex items-center space-x-2 pointer-events-none select-none text-neutral-400 dark:text-neutral-400 font-semibold text-xs">
+                        <span>+591</span>
+                        <span class="h-4 w-[1px] bg-neutral-300 dark:bg-neutral-700"></span>
+                      </div>
+                      <input
+                        type="tel"
+                        inputmode="numeric"
+                        maxlength="8"
+                        [value]="numeroCelular()"
+                        (input)="onNumeroCelularInput($event)"
+                        name="telTitular"
+                        placeholder="77099112"
+                        [class.!border-rose-500]="!!errorTelefono()"
+                        [class.focus:!ring-rose-500/30]="!!errorTelefono()"
+                        [class.bg-rose-500/[0.03]]="!!errorTelefono()"
+                        class="w-full pl-16 pr-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all"
+                      />
+                    </div>
+                    @if (errorTelefono()) {
+                      <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                        </svg>
+                        <span>{{ errorTelefono() }}</span>
+                      </p>
+                    }
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <!-- Correo de Acceso -->
+                  <div class="space-y-1">
+                    <label class="font-medium text-neutral-700 dark:text-neutral-300 block">
+                      Correo de Acceso <span class="text-rose-500 font-bold ml-0.5">*</span>
+                    </label>
+                    <input 
+                      type="email" 
+                      [ngModel]="correo()" 
+                      (ngModelChange)="onCorreoChange($event)"
+                      name="corTitular" 
+                      placeholder="contacto@empresa.bo" 
+                      [class.!border-rose-500]="!!errorCorreo()"
+                      [class.focus:!ring-rose-500/30]="!!errorCorreo()"
+                      [class.bg-rose-500/[0.03]]="!!errorCorreo()"
+                      class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white transition-all" 
+                    />
+                    @if (errorCorreo()) {
+                      <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                        </svg>
+                        <span>{{ errorCorreo() }}</span>
+                      </p>
+                    }
+                  </div>
+
+                  <!-- Contraseña -->
+                  <div class="space-y-1">
+                    <label class="font-medium text-neutral-700 dark:text-neutral-300 block">
+                      Contraseña <span class="text-rose-500 font-bold ml-0.5">*</span>
+                    </label>
+                    <input 
+                      type="password" 
+                      [ngModel]="clave()" 
+                      (ngModelChange)="onClaveChange($event)"
+                      name="claTitular" 
+                      placeholder="••••••••" 
+                      [class.!border-rose-500]="!!errorClave()"
+                      [class.focus:!ring-rose-500/30]="!!errorClave()"
+                      [class.bg-rose-500/[0.03]]="!!errorClave()"
+                      class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white transition-all" 
+                    />
+                    @if (errorClave()) {
+                      <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                        </svg>
+                        <span>{{ errorClave() }}</span>
+                      </p>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============================================== -->
+              <!-- 2. CAMPOS ESPECÍFICOS PARA TIENDA O TALLER     -->
+              <!-- ============================================== -->
+              @if (tipoAliado() === 'VENDEDOR') {
+                <div class="space-y-3 pt-2 border-t border-black/[0.06] dark:border-white/[0.08]">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071E3] block">2. Tipo de Establecimiento Automotriz</span>
+
+                  <!-- Selector Tienda vs Taller vs Ambos -->
+                  <div class="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      (click)="tipoEstablecimiento.set('TIENDA_REPUESTOS')"
+                      [class.bg-neutral-900]="tipoEstablecimiento() === 'TIENDA_REPUESTOS'"
+                      [class.dark:bg-white]="tipoEstablecimiento() === 'TIENDA_REPUESTOS'"
+                      [class.text-white]="tipoEstablecimiento() === 'TIENDA_REPUESTOS'"
+                      [class.dark:text-neutral-900]="tipoEstablecimiento() === 'TIENDA_REPUESTOS'"
+                      [class.bg-black/[0.03]]="tipoEstablecimiento() !== 'TIENDA_REPUESTOS'"
+                      [class.dark:bg-white/[0.06]]="tipoEstablecimiento() !== 'TIENDA_REPUESTOS'"
+                      [class.text-neutral-700]="tipoEstablecimiento() !== 'TIENDA_REPUESTOS'"
+                      [class.dark:text-neutral-300]="tipoEstablecimiento() !== 'TIENDA_REPUESTOS'"
+                      class="p-2.5 rounded-xl text-center text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] transition-all flex flex-col items-center justify-center space-y-1">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.651V9.35m0 0a3.001 3.001 0 003.75-.614A2.996 2.996 0 009.75 9.35c.82 0 1.58-.33 2.14-.863a3.002 3.002 0 004.22 0c.56.533 1.32.863 2.14.863a2.996 2.996 0 002.36-.614 3.001 3.001 0 003.75.614M3.75 9.35V4.875c0-.621.504-1.125 1.125-1.125h14.25c.621 0 1.125.504 1.125 1.125v4.474" />
+                      </svg>
+                      <span>Tienda Repuestos</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="tipoEstablecimiento.set('TALLER_MECANICO')"
+                      [class.bg-neutral-900]="tipoEstablecimiento() === 'TALLER_MECANICO'"
+                      [class.dark:bg-white]="tipoEstablecimiento() === 'TALLER_MECANICO'"
+                      [class.text-white]="tipoEstablecimiento() === 'TALLER_MECANICO'"
+                      [class.dark:text-neutral-900]="tipoEstablecimiento() === 'TALLER_MECANICO'"
+                      [class.bg-black/[0.03]]="tipoEstablecimiento() !== 'TALLER_MECANICO'"
+                      [class.dark:bg-white/[0.06]]="tipoEstablecimiento() !== 'TALLER_MECANICO'"
+                      [class.text-neutral-700]="tipoEstablecimiento() !== 'TALLER_MECANICO'"
+                      [class.dark:text-neutral-300]="tipoEstablecimiento() !== 'TALLER_MECANICO'"
+                      class="p-2.5 rounded-xl text-center text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] transition-all flex flex-col items-center justify-center space-y-1">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.07a4.5 4.5 0 004.486-6.32l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.32 4.486c.09.444.135.903.07 1.353" />
+                      </svg>
+                      <span>Taller Mecánico</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="tipoEstablecimiento.set('REPUESTERA_Y_TALLER')"
+                      [class.bg-neutral-900]="tipoEstablecimiento() === 'REPUESTERA_Y_TALLER'"
+                      [class.dark:bg-white]="tipoEstablecimiento() === 'REPUESTERA_Y_TALLER'"
+                      [class.text-white]="tipoEstablecimiento() === 'REPUESTERA_Y_TALLER'"
+                      [class.dark:text-neutral-900]="tipoEstablecimiento() === 'REPUESTERA_Y_TALLER'"
+                      [class.bg-black/[0.03]]="tipoEstablecimiento() !== 'REPUESTERA_Y_TALLER'"
+                      [class.dark:bg-white/[0.06]]="tipoEstablecimiento() !== 'REPUESTERA_Y_TALLER'"
+                      [class.text-neutral-700]="tipoEstablecimiento() !== 'REPUESTERA_Y_TALLER'"
+                      [class.dark:text-neutral-300]="tipoEstablecimiento() !== 'REPUESTERA_Y_TALLER'"
+                      class="p-2.5 rounded-xl text-center text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] transition-all flex flex-col items-center justify-center space-y-1">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+                      </svg>
+                      <span>Tienda + Taller</span>
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <!-- Nombre Comercial -->
+                    <div class="space-y-1">
+                      <label class="font-medium text-neutral-700 dark:text-neutral-300 block">
+                        {{ tipoEstablecimiento() === 'TALLER_MECANICO' ? 'Nombre Comercial del Taller' : 'Nombre Comercial de la Repuestera' }}
+                        <span class="text-rose-500 font-bold ml-0.5">*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        [ngModel]="nombreTienda()" 
+                        (ngModelChange)="onNombreTiendaChange($event)"
+                        name="nomTienda" 
+                        [placeholder]="tipoEstablecimiento() === 'TALLER_MECANICO' ? 'ej. Taller Mecánico Especializado Soliz' : 'ej. ToyoPartes Grigotá SRL'" 
+                        [class.!border-rose-500]="!!errorNombreTienda()"
+                        [class.focus:!ring-rose-500/30]="!!errorNombreTienda()"
+                        [class.bg-rose-500/[0.03]]="!!errorNombreTienda()"
+                        class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white transition-all" 
+                      />
+                      @if (errorNombreTienda()) {
+                        <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                          <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                          </svg>
+                          <span>{{ errorNombreTienda() }}</span>
+                        </p>
+                      }
+                    </div>
+
+                    <!-- NIT / Padrón Municipal -->
+                    <div class="space-y-1">
+                      <label class="font-medium text-neutral-700 dark:text-neutral-300 block">
+                        NIT / Padrón Municipal <span class="text-rose-500 font-bold ml-0.5">*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        [ngModel]="nitTienda()" 
+                        (ngModelChange)="onNitTiendaChange($event)"
+                        name="nitTienda" 
+                        placeholder="ej. 1028492015" 
+                        [class.!border-rose-500]="!!errorNitTienda()"
+                        [class.focus:!ring-rose-500/30]="!!errorNitTienda()"
+                        [class.bg-rose-500/[0.03]]="!!errorNitTienda()"
+                        class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white font-mono transition-all" 
+                      />
+                      @if (errorNitTienda()) {
+                        <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                          <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                          </svg>
+                          <span>{{ errorNitTienda() }}</span>
+                        </p>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Mapa Interactivo Leaflet: Punto de Recojo Físico -->
+                  <div class="space-y-1.5 pt-1">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center space-x-1.5">
+                        <label class="font-medium text-neutral-700 dark:text-neutral-300 block text-xs">
+                          Ubicación Física en el Mapa (Punto de Recojo) <span class="text-rose-500 font-bold ml-0.5">*</span>
+                        </label>
+                      </div>
+
+                      <!-- Botón GPS Usar mi ubicación actual -->
+                      <button
+                        type="button"
+                        (click)="usarUbicacionActualTienda()"
+                        [disabled]="obteniendoGpsTienda()"
+                        class="active:scale-95 inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-[#0071E3] font-semibold text-[11px] transition-all disabled:opacity-50">
+                        @if (obteniendoGpsTienda()) {
+                          <svg class="w-3 h-3 animate-spin text-[#0071E3]" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Localizando...</span>
+                        } @else {
+                          <svg class="w-3 h-3 text-[#0071E3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.071-7.071l-1.414 1.414M8.343 15.657l-1.414 1.414m12.728 0l-1.414-1.414M8.343 8.343L6.929 6.929M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span>Usar mi ubicación actual (GPS)</span>
+                        }
+                      </button>
+                    </div>
+
+                    <!-- Contenedor del Mapa -->
+                    <div class="relative rounded-2xl overflow-hidden border border-black/[0.08] dark:border-white/[0.12] shadow-inner">
+                      <div id="mapa-tienda" class="w-full h-44 sm:h-48 z-0 bg-neutral-100 dark:bg-neutral-800"></div>
+                      
+                      <!-- Píldora de Coordenadas Flotante -->
+                      <div class="absolute bottom-2 left-2 z-10 pointer-events-none px-2 py-0.5 rounded-lg bg-black/60 backdrop-blur-md text-white text-[10px] font-mono flex items-center space-x-1.5 shadow">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Lat: {{ latitudTienda().toFixed(4) }} | Lng: {{ longitudTienda().toFixed(4) }}</span>
+                      </div>
+                    </div>
+                    <p class="text-[10px] text-neutral-500 dark:text-neutral-400">
+                      Arrastra el pin azul o haz clic para marcar la ubicación exacta de tu tienda o taller para el cálculo de fletes y recojo del repartidor.
+                    </p>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Dirección Física -->
+                    <div class="space-y-1">
+                      <label class="font-medium text-neutral-700 dark:text-neutral-300 block">
+                        Dirección Física en Santa Cruz <span class="text-rose-500 font-bold ml-0.5">*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        [ngModel]="direccionTienda()" 
+                        (ngModelChange)="onDireccionTiendaChange($event)"
+                        name="dirTienda" 
+                        placeholder="ej. Av. Grigotá #420, 2do Anillo" 
+                        [class.!border-rose-500]="!!errorDireccionTienda()"
+                        [class.focus:!ring-rose-500/30]="!!errorDireccionTienda()"
+                        [class.bg-rose-500/[0.03]]="!!errorDireccionTienda()"
+                        class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white transition-all" 
+                      />
+                      @if (errorDireccionTienda()) {
+                        <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                          <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                          </svg>
+                          <span>{{ errorDireccionTienda() }}</span>
+                        </p>
+                      }
+                    </div>
+
+                    <!-- Referencia Visual (Opcional) -->
+                    <div class="space-y-1">
+                      <label class="font-medium text-neutral-700 dark:text-neutral-300 block">Referencia Visual del Local</label>
+                      <input 
+                        type="text" 
+                        [ngModel]="referenciaTienda()" 
+                        (ngModelChange)="referenciaTienda.set($event)"
+                        name="refTienda" 
+                        placeholder="ej. Frente al Banco Unión, letrero azul" 
+                        class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white transition-all" 
+                      />
+                    </div>
+                  </div>
+
+                  @if (tipoEstablecimiento() !== 'TIENDA_REPUESTOS') {
+                    <div class="space-y-1 p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+                      <label class="font-bold text-[#0071E3] block">Servicios de Reparación y Montaje que Ofrece el Taller</label>
+                      <input 
+                        type="text" 
+                        [ngModel]="serviciosTaller()" 
+                        (ngModelChange)="serviciosTaller.set($event)"
+                        name="servTaller" 
+                        placeholder="ej. Cambio de pastillas, embrague, diagnóstico scanner, suspensión" 
+                        class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white" 
+                      />
+                      <p class="text-[10px] text-neutral-500 dark:text-neutral-400">Los clientes podrán solicitar repuestos y enviarlos directamente a tu taller para instalación con garantía.</p>
+                    </div>
+                  }
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                      <label class="font-medium text-neutral-700 dark:text-neutral-300 block">Horario de Atención (Opcional)</label>
+                      <input 
+                        type="text" 
+                        [ngModel]="horarioTienda()" 
+                        (ngModelChange)="horarioTienda.set($event)"
+                        name="horarioTienda" 
+                        placeholder="ej. Lun a Sáb: 08:30 - 18:30" 
+                        class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white" 
+                      />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="font-medium text-neutral-700 dark:text-neutral-300 block">Especialidad de Marcas / Rubro</label>
+                      <input 
+                        type="text" 
+                        [ngModel]="especialidadTienda()" 
+                        (ngModelChange)="especialidadTienda.set($event)"
+                        name="espTienda" 
+                        placeholder="ej. Toyota, Suzuki — Frenos y Motor" 
+                        class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- ============================================== -->
+              <!-- 2. CAMPOS ESPECÍFICOS PARA REPARTIDOR          -->
+              <!-- ============================================== -->
+              @if (tipoAliado() === 'REPARTIDOR') {
+                <div class="space-y-3 pt-2 border-t border-black/[0.06] dark:border-white/[0.08]">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-500 block">2. Tipo de Vehículo para Repartos</span>
+                    <span class="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">Catálogo dinámico</span>
+                  </div>
+
+                  <!-- Selector Dinámico de Tipo de Vehículo desde la BD -->
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    @for (v of tiposVehiculo(); track v.id) {
+                      <button
+                        type="button"
+                        (click)="seleccionarVehiculo(v)"
+                        [class.ring-2]="tipoVehiculoSeleccionado()?.id === v.id"
+                        [class.ring-[#0071E3]]="tipoVehiculoSeleccionado()?.id === v.id"
+                        [class.bg-blue-500/10]="tipoVehiculoSeleccionado()?.id === v.id"
+                        class="p-3 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] text-center space-y-1.5 transition-all">
+                        <div class="w-8 h-8 mx-auto rounded-xl bg-blue-500/15 text-[#0071E3] flex items-center justify-center">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.25H4.125C3.504 7.5 3 8.004 3 8.625V14.25m11.25-6.75v6.75" />
+                          </svg>
+                        </div>
+                        <div class="text-xs font-bold text-neutral-900 dark:text-white">{{ v.nombre }}</div>
+                        <div class="text-[10px] text-neutral-500 dark:text-neutral-400">Hasta {{ v.peso_max_kg }} kg</div>
+                      </button>
+                    }
+                  </div>
+
+                  <!-- Ficha de Capacidad Técnica del Vehículo Seleccionado -->
+                  @if (tipoVehiculoSeleccionado(); as sel) {
+                    <div class="p-3 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between text-xs animate-fadeIn">
+                      <div>
+                        <div class="font-bold text-neutral-900 dark:text-white">{{ sel.nombre }}</div>
+                        <div class="text-[11px] text-neutral-500 dark:text-neutral-400">{{ sel.descripcion }}</div>
+                      </div>
+                      <div class="text-right">
+                        <span class="inline-flex px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase bg-blue-500/10 text-[#0071E3]">
+                          Volumen {{ sel.tamano_maximo }}
+                        </span>
+                        <div class="text-[10px] font-mono text-neutral-500 dark:text-neutral-400 mt-0.5">Capacidad: {{ sel.peso_min_kg }} - {{ sel.peso_max_kg }} kg</div>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Datos Legales del Vehículo -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <!-- Placa -->
+                    <div class="space-y-1">
+                      <label class="font-medium text-neutral-700 dark:text-neutral-300 block">
+                        Número de Placa (PTA) <span class="text-rose-500 font-bold ml-0.5">*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        [ngModel]="placaVehiculo()" 
+                        (ngModelChange)="onPlacaChange($event)"
+                        name="placaRep" 
+                        placeholder="ej. 4920-UXP" 
+                        [class.!border-rose-500]="!!errorPlaca()"
+                        [class.focus:!ring-rose-500/30]="!!errorPlaca()"
+                        [class.bg-rose-500/[0.03]]="!!errorPlaca()"
+                        class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white font-mono uppercase transition-all" 
+                      />
+                      @if (errorPlaca()) {
+                        <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                          <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                          </svg>
+                          <span>{{ errorPlaca() }}</span>
+                        </p>
+                      }
+                    </div>
+
+                    <!-- Licencia -->
+                    <div class="space-y-1">
+                      <label class="font-medium text-neutral-700 dark:text-neutral-300 block">
+                        N° Licencia de Conducir / CI <span class="text-rose-500 font-bold ml-0.5">*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        [ngModel]="licenciaConducir()" 
+                        (ngModelChange)="onLicenciaChange($event)"
+                        name="licRep" 
+                        placeholder="ej. SCZ-8391024 Cat. M/P" 
+                        [class.!border-rose-500]="!!errorLicencia()"
+                        [class.focus:!ring-rose-500/30]="!!errorLicencia()"
+                        [class.bg-rose-500/[0.03]]="!!errorLicencia()"
+                        class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white font-mono transition-all" 
+                      />
+                      @if (errorLicencia()) {
+                        <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                          <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                          </svg>
+                          <span>{{ errorLicencia() }}</span>
+                        </p>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- ACEPTACIÓN DE TÉRMINOS Y POLÍTICAS -->
+              <div class="pt-3 border-t border-black/[0.06] dark:border-white/[0.08] space-y-1.5">
+                <label class="flex items-start space-x-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    [ngModel]="aceptaTerminos()"
+                    (ngModelChange)="onAceptaTerminosChange($event)"
+                    name="aceptaTerminosCheck"
+                    class="mt-0.5 w-4 h-4 rounded text-[#0071E3] focus:ring-[#0071E3] border-neutral-300 dark:border-white/[0.2] dark:bg-white/[0.06] cursor-pointer"
+                  />
+                  <span class="text-[11px] text-neutral-600 dark:text-neutral-300 leading-relaxed select-none">
+                    He leído y acepto los <span class="font-semibold text-[#0071E3] hover:underline">Términos de Servicio</span> y las <span class="font-semibold text-[#0071E3] hover:underline">Políticas de Operación y Seguridad</span> de TuAuto Bolivia <span class="text-rose-500 font-bold ml-0.5">*</span>.
+                  </span>
+                </label>
+                @if (errorTerminos()) {
+                  <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 pl-7 animate-fadeIn">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                    <span>{{ errorTerminos() }}</span>
+                  </p>
+                }
+              </div>
+
+              <!-- Botón de Envío -->
+              <div class="pt-2">
+                <button
+                  type="submit"
+                  [disabled]="cargando()"
+                  class="active:scale-[0.98] transition-all w-full py-3 rounded-xl bg-neutral-900 hover:bg-black dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-bold shadow-md flex items-center justify-center space-x-2">
+                  <span>{{ cargando() ? 'Enviando postulación...' : 'Enviar Solicitud de Afiliación' }}</span>
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+
+      </div>
+    }
+
+    <!-- Pie de página con Enlace al Login -->
+    <div class="text-center text-xs text-neutral-500 dark:text-neutral-400">
+      <span>¿Ya tienes una cuenta activa? </span>
+      <a routerLink="/login" class="font-semibold text-[#0071E3] hover:underline">Iniciar Sesión →</a>
+    </div>
+
+  </div>
+
+  <footer class="mt-8 text-center text-[11px] text-neutral-500 dark:text-neutral-400 space-y-1">
+    <p>TuAuto Bolivia • Santa Cruz de la Sierra</p>
+    <p>Plataforma Automotriz con Custodia Escrow y Pago QR Simple</p>
+  </footer>
+
+</div>

@@ -1,0 +1,168 @@
+@import "leaflet/dist/leaflet.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    overflow-y: scroll;
+  }
+
+  body {
+    background-color: #F5F5F7;
+    color: #1D1D1F;
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+    overflow-x: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  html.dark body {
+    background-color: #000000;
+    color: #F5F5F7;
+  }
+}
+
+/* ==============================================================================
+   REGLAS GLOBALES DE CONTRASTE Y LEGIBILIDAD EN MODO OSCURO (APPLE DESIGN)
+   ============================================================================== */
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6 {
+  color: #FFFFFF;
+}
+
+/* Textos oscuros pasan a blanco o gris claro en modo oscuro */
+html.dark .text-neutral-900:not(.bg-white):not([class*="bg-white"]) {
+  color: #FFFFFF;
+}
+
+html.dark .text-neutral-800:not(.bg-white):not([class*="bg-white"]) {
+  color: #F5F5F7;
+}
+
+html.dark .text-neutral-700:not(.bg-white):not([class*="bg-white"]) {
+  color: #E5E5EA;
+}
+
+html.dark .text-neutral-600:not(.bg-white):not([class*="bg-white"]) {
+  color: #D1D1D6;
+}
+
+html.dark .text-neutral-500:not(.bg-white):not([class*="bg-white"]) {
+  color: #A1A1A6;
+}
+
+html.dark .text-neutral-400:not(.bg-white):not([class*="bg-white"]) {
+  color: #C7C7CC;
+}
+
+/* Excepciones de navegación: pestañas activas o botones con fondo blanco preservan texto oscuro */
+html.dark .bg-white.text-neutral-900,
+html.dark .bg-white .text-neutral-900,
+html.dark .bg-white.text-neutral-800,
+html.dark .bg-white .text-neutral-800 {
+  color: #171717 !important;
+}
+
+/* Fondos y bordes de cajas internas dentro de tarjetas */
+html.dark .bg-neutral-50:not([class*="dark:bg-"]) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+html.dark .bg-neutral-100:not([class*="dark:bg-"]) {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+html.dark .border-neutral-100:not([class*="dark:border-"]),
+html.dark .border-neutral-200:not([class*="dark:border-"]) {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Entradas de formulario globales en modo oscuro (Protección Total de Contraste) */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([class*="dark:text-"]),
+html.dark textarea:not([class*="dark:text-"]),
+html.dark select:not([class*="dark:text-"]) {
+  color: #FFFFFF !important;
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select {
+  color-scheme: dark;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #8E8E93 !important;
+}
+
+/* Apple Glassmorphism Adaptable a Modo Claro y Oscuro */
+.apple-card {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.dark .apple-card {
+  background-color: rgba(28, 28, 30, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.apple-header {
+  background-color: rgba(245, 245, 247, 0.82);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+html.dark .apple-header {
+  background-color: rgba(0, 0, 0, 0.82);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.apple-input {
+  background-color: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #1D1D1F;
+  transition: all 0.15s ease;
+}
+
+html.dark .apple-input {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #F5F5F7;
+}
+
+.apple-input:focus {
+  background-color: #FFFFFF;
+  border-color: #0071E3;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
+}
+
+html.dark .apple-input:focus {
+  background-color: #1C1C1E;
+  border-color: #0071E3;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.35);
+}
+
+/* Ocultar barra de desplazamiento en carruseles táctiles */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

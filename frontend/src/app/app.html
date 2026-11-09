@@ -1,0 +1,98 @@
+<div class="min-h-screen bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-[#F5F5F7] flex flex-col font-sans selection:bg-[#0071E3] selection:text-white antialiased transition-colors duration-200">
+  
+  <!-- Sistema de Notificaciones Toasts Flotante (Apple Notification Style) -->
+  <app-toast></app-toast>
+
+  <!-- Modal Global de Selección de Ubicación en Santa Cruz (Centrado en Viewport, fuera de header) -->
+  <app-ubicacion-modal></app-ubicacion-modal>
+
+  <!-- Header Translúcido Estilo Apple -->
+  @if (auth.estaAutenticado()) {
+    <header class="sticky top-0 z-40 w-full apple-header transition-colors">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+        
+        <!-- Logo y Rol Activo -->
+        <div class="flex items-center space-x-3 select-none flex-shrink-0">
+          <div class="w-8 h-8 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 flex items-center justify-center shadow-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-sm font-semibold tracking-tight text-neutral-900 dark:text-white">Tu<span class="text-[#0071E3]">Auto</span></span>
+            <span class="h-3 w-px bg-black/10 dark:bg-white/20"></span>
+            <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md bg-black/[0.04] dark:bg-white/[0.08] text-neutral-600 dark:text-neutral-300 border border-black/[0.06] dark:border-white/[0.1]">
+              {{ auth.rolPrincipal() }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Barra de Ubicación Estilo PedidosYa (Solo visible para Comprador) -->
+        @if (auth.rolPrincipal() === 'COMPRADOR') {
+          <div class="hidden sm:flex items-center">
+            <app-ubicacion-bar></app-ubicacion-bar>
+          </div>
+        }
+
+        <!-- Controles de Usuario y Switch Modo Oscuro -->
+        <div class="flex items-center space-x-2.5 flex-shrink-0">
+          
+          <!-- Switch Modo Claro / Modo Oscuro Apple SF Symbol -->
+          <button 
+            type="button"
+            (click)="theme.toggleTheme()"
+            [title]="theme.isDarkMode() ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'"
+            class="active:scale-[0.95] transition-all p-2 rounded-full bg-black/[0.04] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-700 dark:text-neutral-200 border border-black/[0.06] dark:border-white/[0.1]">
+            @if (theme.isDarkMode()) {
+              <!-- Sol (Modo Claro) -->
+              <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+              </svg>
+            } @else {
+              <!-- Luna (Modo Oscuro) -->
+              <svg class="w-4 h-4 text-neutral-600 dark:text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+              </svg>
+            }
+          </button>
+
+          <!-- Perfil / Correo -->
+          <div class="text-right hidden md:block">
+            <div class="text-xs font-semibold text-neutral-900 dark:text-white leading-tight">
+              {{ auth.usuarioActual()?.nombre_completo }}
+            </div>
+            <div class="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
+              {{ auth.usuarioActual()?.correo }}
+            </div>
+          </div>
+
+          <!-- Botón de Salir -->
+          <button 
+            type="button"
+            (click)="auth.logout()"
+            class="active:scale-[0.97] transition-all duration-150 inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 text-xs font-medium border border-black/[0.08] dark:border-white/[0.1] shadow-sm">
+            <span>Salir</span>
+            <svg class="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </header>
+  }
+
+  <!-- Contenedor Principal con Router Outlet -->
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-6">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Footer Sobrio Estilo Apple -->
+  <footer class="mt-auto border-t border-black/[0.06] dark:border-white/[0.08] py-5 px-4 text-center text-xs text-neutral-500 dark:text-neutral-400">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span>TuAuto Bolivia • Santa Cruz de la Sierra</span>
+      <span class="text-[11px] opacity-70">Plataforma Automotriz con Custodia Escrow y Pago QR Simple</span>
+    </div>
+  </footer>
+
+</div>

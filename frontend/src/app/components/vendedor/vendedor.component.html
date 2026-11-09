@@ -1,0 +1,977 @@
+<div class="space-y-6">
+
+  <!-- Header de la Tienda -->
+  <div class="apple-card rounded-3xl p-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center space-x-3.5">
+      <div class="w-12 h-12 rounded-2xl bg-black dark:bg-white/10 text-white flex items-center justify-center shadow-sm">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.651V9.35m0 0a3.001 3.001 0 003.75-.614A2.996 2.996 0 009.75 9.35c.82 0 1.58-.33 2.14-.863a3.002 3.002 0 004.22 0c.56.533 1.32.863 2.14.863a2.996 2.996 0 002.36-.614 3.001 3.001 0 003.75.614M3.75 9.35V4.875c0-.621.504-1.125 1.125-1.125h14.25c.621 0 1.125.504 1.125 1.125v4.474" />
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-lg font-bold text-neutral-900 dark:text-white tracking-tight">{{ tienda()?.nombre || 'Mi Taller / Tienda' }}</h1>
+          <span class="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-[#0071E3] text-[10px] font-semibold border border-blue-100 dark:border-blue-900/50">
+            Plan {{ tienda()?.plan_suscripcion }}
+          </span>
+        </div>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ tienda()?.direccion_escrita }} • NIT: {{ tienda()?.nit || 'S/N' }} • Tel: {{ tienda()?.telefono }}</p>
+      </div>
+    </div>
+
+    <!-- Pestañas de Gestión (iOS Segmented Control con Rutas Reales /vendedor/:tab) -->
+    <div class="flex items-center space-x-2">
+      <div class="inline-flex p-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
+        <a 
+          [routerLink]="['/vendedor', 'inventario']"
+          [class.bg-white]="tabActiva() === 'inventario'"
+          [class.text-neutral-900]="tabActiva() === 'inventario'"
+          [class.shadow-sm]="tabActiva() === 'inventario'"
+          [class.text-neutral-500]="tabActiva() !== 'inventario'"
+          [class.dark:text-neutral-400]="tabActiva() !== 'inventario'"
+          class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-lg text-xs font-semibold">
+          Inventario & Stock ({{ repuestos().length }})
+        </a>
+
+        <a 
+          [routerLink]="['/vendedor', 'servicios']"
+          [class.bg-white]="tabActiva() === 'servicios'"
+          [class.text-neutral-900]="tabActiva() === 'servicios'"
+          [class.shadow-sm]="tabActiva() === 'servicios'"
+          [class.text-neutral-500]="tabActiva() !== 'servicios'"
+          [class.dark:text-neutral-400]="tabActiva() !== 'servicios'"
+          class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5">
+          <span>Servicios de Taller ({{ serviciosTaller().length }})</span>
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        </a>
+
+        <a 
+          [routerLink]="['/vendedor', 'pedidos']"
+          [class.bg-white]="tabActiva() === 'pedidos'"
+          [class.text-neutral-900]="tabActiva() === 'pedidos'"
+          [class.shadow-sm]="tabActiva() === 'pedidos'"
+          [class.text-neutral-500]="tabActiva() !== 'pedidos'"
+          [class.dark:text-neutral-400]="tabActiva() !== 'pedidos'"
+          class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-lg text-xs font-semibold">
+          Órdenes ({{ pedidosRecibidos().length }})
+        </a>
+
+        <a 
+          [routerLink]="['/vendedor', 'mensajes']"
+          [class.bg-white]="tabActiva() === 'mensajes'"
+          [class.text-neutral-900]="tabActiva() === 'mensajes'"
+          [class.shadow-sm]="tabActiva() === 'mensajes'"
+          [class.text-neutral-500]="tabActiva() !== 'mensajes'"
+          [class.dark:text-neutral-400]="tabActiva() !== 'mensajes'"
+          class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-lg text-xs font-semibold">
+          Consultas Técnicas ({{ mensajesEntrantes().length }})
+        </a>
+
+        <a 
+          [routerLink]="['/vendedor', 'ajustes']"
+          [class.bg-white]="tabActiva() === 'ajustes'"
+          [class.text-neutral-900]="tabActiva() === 'ajustes'"
+          [class.shadow-sm]="tabActiva() === 'ajustes'"
+          [class.text-neutral-500]="tabActiva() !== 'ajustes'"
+          [class.dark:text-neutral-400]="tabActiva() !== 'ajustes'"
+          class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span>Mi Cuenta & Planes</span>
+        </a>
+      </div>
+
+      <!-- Botón de Sincronización Manual Estilo Apple -->
+      <button
+        type="button"
+        (click)="refrescarTodoManual()"
+        [disabled]="cargando()"
+        class="active:scale-95 transition-all p-2 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] border border-black/[0.04] text-neutral-600 dark:text-neutral-300 flex items-center space-x-1.5 text-xs font-semibold"
+        title="Sincronizar datos en tiempo real">
+        <svg class="w-3.5 h-3.5 text-[#0071E3]" [class.animate-spin]="cargando()" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+        </svg>
+        <span class="hidden sm:inline">Refrescar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- PESTAÑA 1: INVENTARIO Y STOCK -->
+  @if (tabActiva() === 'inventario') {
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-neutral-900 dark:text-white">Catálogo de Repuestos en Tienda</h2>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">Administra el stock físico y las reservas automáticas en custodia Escrow.</p>
+        </div>
+        <a 
+          routerLink="/vendedor/nuevo-repuesto"
+          class="active:scale-[0.98] transition-all px-4 py-2.5 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-sm flex items-center space-x-1.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          <span>Publicar Nuevo Repuesto</span>
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        @for (rep of repuestos(); track rep.id) {
+          <div class="apple-card rounded-3xl p-5 shadow-sm space-y-3.5 relative">
+            @if (rep.es_destacado) {
+              <div class="absolute -top-2.5 left-5 px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-semibold uppercase tracking-wider shadow-sm">
+                Destacado Activo
+              </div>
+            }
+
+            <!-- Fila superior: Estado de Publicación y Botón Editar -->
+            <div class="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                (click)="toggleEstadoActivo(rep, $event)"
+                class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors"
+                [class.bg-emerald-50]="rep.esta_activo !== false"
+                [class.dark:bg-emerald-950/40]="rep.esta_activo !== false"
+                [class.text-emerald-700]="rep.esta_activo !== false"
+                [class.dark:text-emerald-400]="rep.esta_activo !== false"
+                [class.border]="true"
+                [class.border-emerald-200]="rep.esta_activo !== false"
+                [class.dark:border-emerald-800]="rep.esta_activo !== false"
+                [class.bg-neutral-100]="rep.esta_activo === false"
+                [class.dark:bg-neutral-800]="rep.esta_activo === false"
+                [class.text-neutral-500]="rep.esta_activo === false"
+                [class.border-neutral-200]="rep.esta_activo === false"
+                [class.dark:border-neutral-700]="rep.esta_activo === false"
+                title="Haz clic para activar o pausar">
+                <span class="w-1.5 h-1.5 rounded-full" [class.bg-emerald-500]="rep.esta_activo !== false" [class.bg-neutral-400]="rep.esta_activo === false"></span>
+                <span>{{ rep.esta_activo !== false ? 'Habilitado' : 'Pausado' }}</span>
+              </button>
+
+              <a
+                [routerLink]="['/vendedor/editar-repuesto', rep.id]"
+                class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-neutral-100 dark:bg-white/[0.08] hover:bg-neutral-200/80 dark:hover:bg-white/[0.12] text-neutral-700 dark:text-neutral-200 text-xs font-semibold transition-colors">
+                <svg class="w-3.5 h-3.5 text-[#0071E3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                </svg>
+                <span>Editar</span>
+              </a>
+            </div>
+
+            <!-- Datos principales del repuesto con enlace a edición -->
+            <a [routerLink]="['/vendedor/editar-repuesto', rep.id]" class="flex items-center space-x-3 group block">
+              <img 
+                [src]="rep.url_imagen" 
+                (error)="$any($event.target).src = 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=600&auto=format&fit=crop&q=80'"
+                class="w-16 h-16 rounded-2xl object-cover bg-neutral-100 dark:bg-neutral-800 flex-shrink-0 group-hover:opacity-90 transition-opacity" />
+              <div class="flex-1 min-w-0">
+                <h4 class="text-xs font-bold text-neutral-900 dark:text-white line-clamp-1 group-hover:text-[#0071E3] transition-colors">{{ rep.titulo }}</h4>
+                <p class="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">SKU: {{ rep.sku }} • OEM: {{ rep.numero_oem }}</p>
+                <div class="text-xs font-bold text-neutral-900 dark:text-white mt-1">Bs {{ rep.precio_bob.toFixed(2) }} ($ {{ rep.precio_usd.toFixed(2) }})</div>
+              </div>
+            </a>
+
+            <!-- Alertas de Stock Bajo / Agotado -->
+            @if (rep.stock_disponible <= 0) {
+              <div class="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-[11px] font-semibold flex items-center space-x-1.5">
+                <span>❌</span>
+                <span>Agotado (Pausado automáticamente)</span>
+              </div>
+            } @else if (rep.stock_disponible <= (rep.stock_minimo || 2)) {
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-[11px] font-semibold flex items-center space-x-1.5">
+                <span>⚠️</span>
+                <span>Alerta: Stock Bajo (Quedan {{ rep.stock_disponible }} un.)</span>
+              </div>
+            }
+
+            <!-- Manejo de Stock Físico -->
+            <div class="p-3 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08] text-xs flex justify-between items-center">
+              <div>
+                <span class="text-[10px] text-neutral-400 block font-semibold uppercase">Stock Físico</span>
+                <span class="font-bold text-sm text-emerald-600">{{ rep.stock_disponible }} unidades</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-neutral-400 block font-semibold uppercase">En Custodia</span>
+                <span class="font-bold text-sm text-amber-600">{{ rep.stock_reservado }} órdenes</span>
+              </div>
+            </div>
+
+            <!-- Botón Impulso Boost -->
+            <button 
+              (click)="activarBoost(rep)"
+              [disabled]="rep.es_destacado"
+              class="active:scale-[0.98] transition-all w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5"
+              [class.bg-neutral-900]="!rep.es_destacado"
+              [class.text-white]="!rep.es_destacado"
+              [class.dark:bg-white]="!rep.es_destacado"
+              [class.dark:text-neutral-900]="!rep.es_destacado"
+              [class.bg-neutral-100]="rep.es_destacado"
+              [class.dark:bg-neutral-800]="rep.es_destacado"
+              [class.text-neutral-400]="rep.es_destacado">
+              <span>{{ rep.es_destacado ? 'Destaque Vigente (7 días)' : 'Impulsar con Boost (Bs 25.00)' }}</span>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- PESTAÑA: SERVICIOS MECÁNICOS Y DE INSTALACIÓN DEL TALLER -->
+  @if (tabActiva() === 'servicios') {
+    <div class="space-y-5">
+      <!-- Banner Estratégico de Sinergia Taller & Marketplace -->
+      <div class="p-5 rounded-3xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-transparent border border-blue-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2">
+            <span class="w-6 h-6 rounded-lg bg-[#0071E3] text-white flex items-center justify-center">
+              <app-icon name="wrench" size="xs"></app-icon>
+            </span>
+            <h3 class="text-sm font-bold text-neutral-900 dark:text-white">Red de Talleres Aliados y Servicios de Reparación</h3>
+          </div>
+          <p class="text-xs text-neutral-600 dark:text-neutral-300 max-w-2xl leading-relaxed">
+            <strong>Doble beneficio:</strong> Si un cliente llega a tu taller y no tienes la pieza, dile que la pida por TuAuto para entrega express en tu local en 60 min. Y cuando los usuarios compren repuestos en la plataforma, aparecerás como <strong>Taller Recomendado</strong> para realizar la instalación con mano de obra garantizada.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5 self-start md:self-center">
+          <button
+            type="button"
+            (click)="mostrarModalQrTaller.set(true)"
+            class="active:scale-[0.98] transition-all px-4 py-2.5 rounded-xl bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white border border-black/[0.08] dark:border-white/[0.1] text-xs font-bold shadow-sm whitespace-nowrap flex items-center justify-center space-x-1.5">
+            <svg class="w-4 h-4 text-[#0071E3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 19.5h.75v.75h-.75v-.75z" />
+            </svg>
+            <span>Mi QR de Taller</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="abrirModalServicio()"
+            class="active:scale-[0.98] transition-all px-4 py-2.5 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-bold shadow-md whitespace-nowrap flex items-center justify-center space-x-1.5">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span>Nuevo Servicio Mecánico</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Métricas de Taller Aliado -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="p-4 rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08]">
+          <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">Calificación de Taller</span>
+          <div class="flex items-center space-x-1.5 mt-0.5">
+            @if (tienda()?.total_resenas && tienda()!.total_resenas! > 0) {
+              <span class="text-lg font-extrabold text-neutral-900 dark:text-white">{{ tienda()?.calificacion?.toFixed(1) }}</span>
+              <div class="flex text-amber-400">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+              </div>
+              <span class="text-[11px] text-neutral-500 dark:text-neutral-400">({{ tienda()?.total_resenas }} reseñas)</span>
+            } @else {
+              <span class="text-base font-extrabold text-neutral-900 dark:text-white">Nuevo</span>
+              <span class="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">(Sin reseñas aún)</span>
+            }
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08]">
+          <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">Servicios Activos</span>
+          <span class="text-lg font-extrabold text-neutral-900 dark:text-white">{{ serviciosTaller().length }} servicios</span>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08]">
+          <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">Repuestos Recibidos en Taller</span>
+          <span class="text-lg font-extrabold text-emerald-600">{{ pedidosRecibidos().length }} entregas</span>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08]">
+          <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">Estado de Afiliación</span>
+          <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 mt-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>Taller Certificado</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Catálogo de Servicios de Mano de Obra del Taller -->
+      @if (serviciosTaller().length === 0) {
+        <div class="py-12 px-4 text-center space-y-3 rounded-3xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.06]">
+          <div class="w-12 h-12 mx-auto rounded-full bg-blue-500/10 text-[#0071E3] flex items-center justify-center">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.05a4.5 4.5 0 004.486-6.32l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.32 4.486c.138.58.114 1.193-.05 1.743" />
+            </svg>
+          </div>
+          <div class="space-y-1">
+            <h4 class="text-sm font-bold text-neutral-900 dark:text-white">Sin servicios mecánicos registrados</h4>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm mx-auto">
+              Publica los servicios de instalación, montaje o diagnóstico que ofrece tu taller para que los compradores puedan solicitarlos junto a sus repuestos.
+            </p>
+          </div>
+          <button
+            type="button"
+            (click)="abrirModalServicio()"
+            class="active:scale-[0.98] inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-sm transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span>Agregar Primer Servicio</span>
+          </button>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          @for (srv of serviciosTaller(); track srv.id) {
+            <div class="apple-card rounded-3xl p-5 shadow-sm space-y-3">
+              <div class="flex items-start justify-between gap-3">
+                <div class="space-y-0.5">
+                  <span class="px-2 py-0.5 rounded-md bg-blue-500/10 text-[#0071E3] text-[10px] font-bold uppercase">
+                    {{ srv.categoria_repuesto_relacionada || 'Mecánica General' }}
+                  </span>
+                  <h4 class="text-sm font-bold text-neutral-900 dark:text-white">{{ srv.nombre }}</h4>
+                </div>
+                <div class="text-right">
+                  <span class="text-base font-extrabold text-neutral-900 dark:text-white">Bs {{ srv.precio_bob }}</span>
+                  <span class="text-[10px] text-neutral-400 block">Mano de Obra</span>
+                </div>
+              </div>
+
+              <p class="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">{{ srv.descripcion }}</p>
+
+              <div class="flex items-center justify-between pt-2 border-t border-black/[0.04] dark:border-white/[0.06] text-xs text-neutral-500 dark:text-neutral-400">
+                <div class="flex items-center space-x-1">
+                  <svg class="w-3.5 h-3.5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Tiempo est.: <strong>{{ srv.tiempo_estimado_min }} min</strong></span>
+                </div>
+                <div class="flex items-center space-x-1 text-emerald-600 font-semibold">
+                  <span>Garantía: {{ srv.garantia_meses }} meses</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- PESTAÑA 2: ÓRDENES RECIBIDAS & ESCROW -->
+  @if (tabActiva() === 'pedidos') {
+    <div class="space-y-4">
+      <h2 class="text-base font-bold text-neutral-900 dark:text-white">Órdenes de Compra Recibidas</h2>
+
+      @if (pedidosRecibidos().length === 0) {
+        <div class="bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl rounded-3xl p-10 text-center text-xs text-neutral-500 dark:text-neutral-400 border border-black/[0.06] dark:border-white/[0.08]">
+          No hay órdenes pendientes en este momento.
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (ped of pedidosRecibidos(); track ped.id) {
+            <div class="bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl rounded-3xl p-5 border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-black/[0.04] dark:border-white/[0.06]">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-xs font-bold text-neutral-900 dark:text-white font-mono">{{ ped.numero_orden }}</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
+                    [class.bg-blue-500/10]="ped.tipo_entrega === 'DELIVERY_MOTO'"
+                    [class.text-[#0071E3]]="ped.tipo_entrega === 'DELIVERY_MOTO'"
+                    [class.bg-purple-500/10]="ped.tipo_entrega === 'RETIRO_TIENDA'"
+                    [class.text-purple-600]="ped.tipo_entrega === 'RETIRO_TIENDA'">
+                    {{ ped.tipo_entrega === 'DELIVERY_MOTO' ? 'Envío con Repartidor' : 'Retiro en Mostrador' }}
+                  </span>
+
+                  <!-- Badge de Estado Dinámico -->
+                  @if (ped.estado === 'EN_PREPARACION') {
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                      🟡 Alistando en Local
+                    </span>
+                  } @else if (ped.estado === 'EN_CAMINO_A_TIENDA') {
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-[#0071E3] border border-blue-500/20 animate-pulse">
+                      🚗 Repartidor en camino a tu local
+                    </span>
+                  } @else if (ped.estado === 'EN_TIENDA') {
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                      📍 Repartidor en mostrador
+                    </span>
+                  } @else if (ped.estado === 'EN_CAMINO_A_DESTINO' || ped.estado === 'EN_CAMINO') {
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 border border-indigo-500/20">
+                      🚀 Repartidor en camino al comprador
+                    </span>
+                  } @else if (ped.estado === 'EN_DESTINO') {
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                      🏁 Repartidor en destino validando PIN
+                    </span>
+                  } @else if (ped.estado === 'LISTO_RETIRO') {
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600 border border-purple-500/20">
+                      🏪 Listo para retiro en mostrador
+                    </span>
+                  } @else if (ped.estado === 'COMPLETADO') {
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                      ✅ Entregado • Fondos liberados
+                    </span>
+                  } @else {
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-neutral-100 dark:bg-white/[0.08] text-neutral-600 dark:text-neutral-300">
+                      {{ ped.estado }}
+                    </span>
+                  }
+                </div>
+
+                <!-- Liquidación de Fondos -->
+                <div class="text-right">
+                  <span class="text-[10px] text-neutral-400 block font-semibold uppercase">Liquidación Neta Tienda</span>
+                  <span class="text-base font-bold text-emerald-600">Bs {{ ped.liquidacion_tienda_bs.toFixed(2) }}</span>
+                </div>
+              </div>
+
+              <!-- Detalles de la Pieza y el Cliente -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div class="space-y-1">
+                  <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Repuesto Vendido</span>
+                  <div class="font-bold text-neutral-900 dark:text-white">{{ ped.repuesto?.titulo }}</div>
+                  <div class="text-neutral-500 dark:text-neutral-400 font-mono text-[11px]">SKU: {{ ped.repuesto?.sku }} • Peso: {{ ped.repuesto?.peso_kg }}kg</div>
+                </div>
+
+                <div class="space-y-1">
+                  <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Comprador y Destino</span>
+                  <div class="font-bold text-neutral-900 dark:text-white">{{ ped.usuario_comprador?.nombre_completo || 'Cliente Registrado' }}</div>
+                  <div class="text-neutral-500 dark:text-neutral-400 text-[11px]">
+                    {{ ped.tipo_entrega === 'DELIVERY_MOTO' ? (ped.direccion_escrita || 'Entrega a Domicilio') : 'Retiro presencial en mostrador' }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Acciones de Gestión y Entrega según Tipo -->
+              @if (ped.tipo_entrega === 'DELIVERY_MOTO') {
+                @if (ped.estado === 'EN_PREPARACION') {
+                  <div class="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-black/[0.04] dark:border-white/[0.06]">
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">¿Ya tienes listo y embalado el repuesto en mostrador?</p>
+                    <button
+                      (click)="marcarListoDespacho(ped)"
+                      [disabled]="cargando()"
+                      class="active:scale-95 px-4 py-2 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-sm transition-all flex items-center space-x-1.5">
+                      <span>📦 Confirmar Pieza Lista para Despacho</span>
+                    </button>
+                  </div>
+                } @else if (ped.estado === 'EN_TIENDA') {
+                  <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300 font-semibold flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-amber-500 flex-shrink-0 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                    </svg>
+                    <span>El repartidor ha llegado a tu local. Entrega el repuesto para que inicie viaje hacia el comprador.</span>
+                  </div>
+                }
+              } @else if (ped.tipo_entrega === 'RETIRO_TIENDA') {
+                @if (ped.estado === 'EN_PREPARACION') {
+                  <div class="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-black/[0.04] dark:border-white/[0.06]">
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Alista el repuesto para que el cliente pase a retirarlo.</p>
+                    <button
+                      (click)="marcarListoDespacho(ped)"
+                      [disabled]="cargando()"
+                      class="active:scale-95 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold shadow-sm transition-all flex items-center space-x-1.5">
+                      <span>🏪 Marcar Listo para Retiro en Mostrador</span>
+                    </button>
+                  </div>
+                } @else if (ped.estado === 'LISTO_RETIRO') {
+                  <!-- Entrega en Mostrador con Validación de PIN -->
+                  <div class="p-3.5 rounded-2xl bg-purple-500/5 dark:bg-purple-900/10 border border-purple-500/20 space-y-2.5">
+                    <div class="flex items-center space-x-2 text-purple-700 dark:text-purple-300 text-xs font-bold">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
+                      <span>Entrega en Mostrador: Solicita el PIN de 4 dígitos al comprador</span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                      <input
+                        type="text"
+                        [ngModel]="pinRetiroTienda()[ped.id] || ''"
+                        (ngModelChange)="actualizarPinInput(ped.id, $event)"
+                        placeholder="PIN (ej. 4829)"
+                        maxlength="6"
+                        class="px-3.5 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-xs font-mono font-bold tracking-widest text-center w-40 text-neutral-900 dark:text-white"
+                      />
+                      <button
+                        (click)="confirmarEntregaMostrador(ped)"
+                        [disabled]="cargando()"
+                        class="active:scale-95 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm flex items-center space-x-1.5 transition-all">
+                        <span>Validar PIN y Entregar Repuesto</span>
+                      </button>
+                    </div>
+
+                    @if (errorPinTienda()[ped.id]) {
+                      <p class="text-xs font-semibold text-rose-600">{{ errorPinTienda()[ped.id] }}</p>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- PESTAÑA 3: CHAT PRE-COMPRA -->
+  @if (tabActiva() === 'mensajes') {
+    <div class="space-y-4">
+      <h2 class="text-base font-bold text-neutral-900 dark:text-white">Consultas Técnicas de Compradores</h2>
+
+      <div class="space-y-3">
+        @for (msg of mensajesEntrantes(); track msg.id) {
+          <div class="bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl rounded-3xl p-5 border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-2">
+            <div class="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400">
+              <span>Cliente: <strong class="text-neutral-900 dark:text-white">{{ msg.remitente_nombre }}</strong></span>
+              <span class="text-[11px] font-mono">{{ msg.creado_en | date:'short' }}</span>
+            </div>
+            <p class="text-xs text-neutral-800 dark:text-neutral-200 bg-neutral-50 dark:bg-white/[0.04] p-3 rounded-2xl border border-neutral-100 dark:border-white/[0.08]">{{ msg.texto }}</p>
+            <div class="text-right">
+              <button 
+                (click)="responderCompatibilidad(msg)"
+                class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm">
+                Confirmar Compatibilidad 100%
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- PESTAÑA: AJUSTES DE MI CUENTA & PLANES DE MEMBRESÍA -->
+  @if (tabActiva() === 'ajustes') {
+    <div class="space-y-6">
+      
+      <!-- Ficha de Información de la Cuenta -->
+      <div class="apple-card rounded-3xl p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-blue-500/10 text-[#0071E3] flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.651V9.35m0 0a3.001 3.001 0 003.75-.614A2.996 2.996 0 009.75 9.35c.82 0 1.58-.33 2.14-.863a3.002 3.002 0 004.22 0c.56.533 1.32.863 2.14.863a2.996 2.996 0 002.36-.614 3.001 3.001 0 003.75.614M3.75 9.35V4.875c0-.621.504-1.125 1.125-1.125h14.25c.621 0 1.125.504 1.125 1.125v4.474" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-neutral-900 dark:text-white">Ficha del Establecimiento Automotriz</h3>
+              <p class="text-[11px] text-neutral-500 dark:text-neutral-400">Datos públicos visibles para los compradores en Santa Cruz</p>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+            [class.bg-emerald-500/10]="tienda()?.esta_verificada"
+            [class.text-emerald-600]="tienda()?.esta_verificada"
+            [class.bg-amber-500/10]="!tienda()?.esta_verificada"
+            [class.text-amber-600]="!tienda()?.esta_verificada">
+            {{ tienda()?.esta_verificada ? 'Comercio Verificado' : 'Validación Pendiente' }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div class="p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.06]">
+            <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">Nombre Comercial</span>
+            <span class="font-bold text-neutral-900 dark:text-white">{{ tienda()?.nombre }}</span>
+          </div>
+          <div class="p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.06]">
+            <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">NIT / Padrón</span>
+            <span class="font-mono font-bold text-neutral-900 dark:text-white">{{ tienda()?.nit || '1029485012' }}</span>
+          </div>
+          <div class="p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.06]">
+            <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">Teléfono / WhatsApp</span>
+            <span class="font-bold text-neutral-900 dark:text-white">{{ tienda()?.telefono }}</span>
+          </div>
+          <div class="sm:col-span-2 p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.06]">
+            <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">Dirección Física en Santa Cruz</span>
+            <span class="font-semibold text-neutral-900 dark:text-white">{{ tienda()?.direccion_escrita }}</span>
+          </div>
+          <div class="p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.06]">
+            <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">Horario de Atención</span>
+            <span class="font-semibold text-neutral-900 dark:text-white">{{ tienda()?.horario_atencion }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Planes de Membresía (Pricing Cards Estilo Apple) -->
+      <div class="space-y-4">
+        <div>
+          <h3 class="text-base font-bold text-neutral-900 dark:text-white tracking-tight">Planes de Membresía para Comercios</h3>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">Cada cuenta nueva comienza con el plan Free. Mejora tu plan para acceder a menor comisión y catálogo ilimitado.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <!-- 1. PLAN BÁSICO (FREE) -->
+          <div 
+            [class.ring-2]="tienda()?.plan_suscripcion === 'GRATUITO'"
+            [class.ring-[#0071E3]]="tienda()?.plan_suscripcion === 'GRATUITO'"
+            class="apple-card rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 text-[10px] font-bold uppercase tracking-wider">
+                  Plan Inicial
+                </span>
+                @if (tienda()?.plan_suscripcion === 'GRATUITO') {
+                  <span class="px-2 py-0.5 rounded-full bg-blue-500/10 text-[#0071E3] text-[10px] font-bold">
+                    Plan Actual
+                  </span>
+                }
+              </div>
+
+              <div>
+                <h4 class="text-lg font-bold text-neutral-900 dark:text-white">Plan Básico Free</h4>
+                <div class="flex items-baseline space-x-1 mt-1">
+                  <span class="text-2xl font-extrabold text-neutral-900 dark:text-white">Bs 0</span>
+                  <span class="text-xs text-neutral-500 dark:text-neutral-400">/ mes</span>
+                </div>
+              </div>
+
+              <ul class="text-xs text-neutral-600 dark:text-neutral-300 space-y-2 pt-2 border-t border-black/[0.04] dark:border-white/[0.06]">
+                <li class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <span>Hasta 10 repuestos en catálogo</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <span>10% de comisión por venta exitosa</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <span>Cobros seguros con custodia Escrow</span>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              type="button"
+              (click)="cambiarPlan('GRATUITO')"
+              [disabled]="tienda()?.plan_suscripcion === 'GRATUITO'"
+              [class.opacity-50]="tienda()?.plan_suscripcion === 'GRATUITO'"
+              class="active:scale-[0.98] transition-all w-full py-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 text-xs font-bold">
+              {{ tienda()?.plan_suscripcion === 'GRATUITO' ? 'Tu Plan Activo' : 'Bajar a Plan Básico' }}
+            </button>
+          </div>
+
+          <!-- 2. PLAN PRO -->
+          <div 
+            [class.ring-2]="tienda()?.plan_suscripcion === 'PRO'"
+            [class.ring-[#0071E3]]="tienda()?.plan_suscripcion === 'PRO'"
+            class="apple-card rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full bg-blue-500/10 text-[#0071E3] text-[10px] font-bold uppercase tracking-wider">
+                  Más Popular
+                </span>
+                @if (tienda()?.plan_suscripcion === 'PRO') {
+                  <span class="px-2 py-0.5 rounded-full bg-blue-500/10 text-[#0071E3] text-[10px] font-bold">
+                    Plan Actual
+                  </span>
+                }
+              </div>
+
+              <div>
+                <h4 class="text-lg font-bold text-neutral-900 dark:text-white">Plan PRO</h4>
+                <div class="flex items-baseline space-x-1 mt-1">
+                  <span class="text-2xl font-extrabold text-[#0071E3]">Bs 99</span>
+                  <span class="text-xs text-neutral-500 dark:text-neutral-400">/ mes</span>
+                </div>
+              </div>
+
+              <ul class="text-xs text-neutral-600 dark:text-neutral-300 space-y-2 pt-2 border-t border-black/[0.04] dark:border-white/[0.06]">
+                <li class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <span><strong>Catálogo y Servicios ILIMITADOS</strong></span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <span><strong>Comisión reducida al 5%</strong></span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <span>Insignia de Tienda Verificada</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <span>Soporte prioritario por WhatsApp</span>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              type="button"
+              (click)="cambiarPlan('PRO')"
+              [disabled]="tienda()?.plan_suscripcion === 'PRO'"
+              class="active:scale-[0.98] transition-all w-full py-2.5 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-bold shadow-md">
+              {{ tienda()?.plan_suscripcion === 'PRO' ? 'Tu Plan Activo' : 'Mejorar a Plan PRO' }}
+            </button>
+          </div>
+
+          <!-- 3. PLAN PREMIUM -->
+          <div 
+            [class.ring-2]="tienda()?.plan_suscripcion === 'PREMIUM'"
+            [class.ring-[#0071E3]]="tienda()?.plan_suscripcion === 'PREMIUM'"
+            class="apple-card rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                  Máxima Exposición
+                </span>
+                @if (tienda()?.plan_suscripcion === 'PREMIUM') {
+                  <span class="px-2 py-0.5 rounded-full bg-blue-500/10 text-[#0071E3] text-[10px] font-bold">
+                    Plan Actual
+                  </span>
+                }
+              </div>
+
+              <div>
+                <h4 class="text-lg font-bold text-neutral-900 dark:text-white">Plan PREMIUM</h4>
+                <div class="flex items-baseline space-x-1 mt-1">
+                  <span class="text-2xl font-extrabold text-amber-500">Bs 199</span>
+                  <span class="text-xs text-neutral-500 dark:text-neutral-400">/ mes</span>
+                </div>
+              </div>
+
+              <ul class="text-xs text-neutral-600 dark:text-neutral-300 space-y-2 pt-2 border-t border-black/[0.04] dark:border-white/[0.06]">
+                <li class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <span><strong>Comisión mínima del 3%</strong></span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <span>Prioridad #1 en búsquedas de Santa Cruz</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <span>2 Boosts patrocinados al mes incluidos</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <span>Reporte mensual de demanda OEM</span>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              type="button"
+              (click)="cambiarPlan('PREMIUM')"
+              [disabled]="tienda()?.plan_suscripcion === 'PREMIUM'"
+              class="active:scale-[0.98] transition-all w-full py-2.5 rounded-xl bg-neutral-900 hover:bg-black dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-bold shadow-md">
+              {{ tienda()?.plan_suscripcion === 'PREMIUM' ? 'Tu Plan Activo' : 'Mejorar a PREMIUM' }}
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  }
+  @if (mostrarModalServicio()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div class="apple-card rounded-3xl p-6 shadow-2xl max-w-lg w-full space-y-4 animate-scale-pop">
+        <div class="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="w-8 h-8 rounded-xl bg-[#0071E3] text-white flex items-center justify-center">
+              <app-icon name="wrench" size="sm"></app-icon>
+            </span>
+            <div>
+              <h3 class="text-sm font-bold text-neutral-900 dark:text-white">Publicar Nuevo Servicio Mecánico</h3>
+              <p class="text-[11px] text-neutral-500 dark:text-neutral-400">Ofrece mano de obra calificada a los compradores de repuestos</p>
+            </div>
+          </div>
+          <button (click)="cerrarModalServicio()" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form (submit)="guardarServicio(); $event.preventDefault()" class="space-y-3.5 text-xs">
+          <div class="space-y-1">
+            <label class="font-bold text-neutral-700 dark:text-neutral-300">Nombre del Servicio de Instalación</label>
+            <input
+              type="text"
+              [(ngModel)]="nuevoServicioNombre"
+              name="srvNom"
+              required
+              placeholder="ej. Cambio de Amortiguadores Delanteros"
+              class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-neutral-700 dark:text-neutral-300">Detalles Técnicos de la Mano de Obra</label>
+            <textarea
+              [(ngModel)]="nuevoServicioDescripcion"
+              name="srvDesc"
+              rows="2"
+              placeholder="Describe qué incluye el trabajo (ej. desmontaje, engrase, purgado, torque según manual OEM)..."
+              class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white"
+            ></textarea>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div class="space-y-1">
+              <label class="font-bold text-neutral-700 dark:text-neutral-300">Tarifa Mano de Obra (Bs)</label>
+              <input
+                type="number"
+                [(ngModel)]="nuevoServicioPrecio"
+                name="srvPrec"
+                min="20"
+                placeholder="0.00"
+                class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white font-bold"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-bold text-neutral-700 dark:text-neutral-300">Tiempo Est. (min)</label>
+              <input
+                type="number"
+                [(ngModel)]="nuevoServicioTiempoMin"
+                name="srvTime"
+                min="15"
+                step="15"
+                placeholder="ej. 60"
+                class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-bold text-neutral-700 dark:text-neutral-300">Garantía (Meses)</label>
+              <input
+                type="number"
+                [(ngModel)]="nuevoServicioGarantiaMeses"
+                name="srvGar"
+                min="1"
+                placeholder="ej. 6"
+                class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white font-bold text-emerald-600"
+              />
+            </div>
+          </div>
+
+          <div class="pt-2 flex justify-end space-x-2.5">
+            <button
+              type="button"
+              (click)="cerrarModalServicio()"
+              class="px-4 py-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 text-xs font-semibold">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2.5 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-bold shadow-md">
+              Publicar Servicio en TuAuto
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL APPLE: IDENTIFICACIÓN Y CÓDIGO QR DE TALLER ALIADO -->
+  @if (mostrarModalQrTaller()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <!-- Backdrop -->
+      <div class="fixed inset-0 bg-black/50 backdrop-blur-md" (click)="mostrarModalQrTaller.set(false)"></div>
+
+      <!-- Card Modal -->
+      <div class="relative w-full max-w-lg apple-card rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 animate-scale-pop z-10">
+        <div class="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] pb-3.5">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-blue-500/10 text-[#0071E3] flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 19.5h.75v.75h-.75v-.75z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-neutral-900 dark:text-white">Identificación de Taller Aliado</h3>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">Vincula a tus clientes para recibir entregas y comisiones en tu local</p>
+            </div>
+          </div>
+
+          <button (click)="mostrarModalQrTaller.set(false)" class="w-7 h-7 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          <!-- QR y Código Destacado -->
+          <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.06] flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+            <div class="w-28 h-28 rounded-xl bg-white p-2 border border-neutral-200 shadow-sm flex items-center justify-center flex-shrink-0">
+              <!-- SVG QR Ilustrativo Profesional -->
+              <svg class="w-full h-full text-black" viewBox="0 0 100 100" fill="currentColor">
+                <rect x="0" y="0" width="30" height="30" rx="4" />
+                <rect x="5" y="5" width="20" height="20" fill="white" rx="2" />
+                <rect x="10" y="10" width="10" height="10" />
+                
+                <rect x="70" y="0" width="30" height="30" rx="4" />
+                <rect x="75" y="5" width="20" height="20" fill="white" rx="2" />
+                <rect x="80" y="10" width="10" height="10" />
+                
+                <rect x="0" y="70" width="30" height="30" rx="4" />
+                <rect x="5" y="75" width="20" height="20" fill="white" rx="2" />
+                <rect x="10" y="80" width="10" height="10" />
+
+                <rect x="40" y="10" width="20" height="10" />
+                <rect x="40" y="30" width="10" height="40" />
+                <rect x="60" y="40" width="30" height="10" />
+                <rect x="70" y="60" width="20" height="30" />
+                <rect x="40" y="80" width="20" height="10" />
+              </svg>
+            </div>
+
+            <div class="space-y-1.5 flex-1">
+              <span class="text-[10px] text-neutral-400 uppercase tracking-wider font-bold block">Código Único de Taller</span>
+              <div class="font-mono text-base font-extrabold text-[#0071E3] tracking-wide">{{ codigoReferenciaTaller() }}</div>
+              <p class="text-[11px] text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                Tus clientes pueden escanear este QR o ingresar tu código para que TuAuto despache automáticamente a tu dirección en <strong>{{ tienda()?.direccion_escrita }}</strong>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Enlace Directo Compartible -->
+          <div class="space-y-1.5">
+            <label class="font-bold text-neutral-700 dark:text-neutral-300 block">Enlace Directo para Clientes (WhatsApp)</label>
+            <div class="flex items-center space-x-2">
+              <input
+                type="text"
+                readonly
+                [value]="enlaceReferenciaTaller()"
+                class="flex-1 px-3.5 py-2.5 rounded-xl apple-input font-mono text-[11px] text-neutral-700 dark:text-neutral-200 bg-neutral-100 dark:bg-white/[0.04]"
+              />
+              <button
+                type="button"
+                (click)="copiarEnlaceTaller()"
+                class="active:scale-95 transition-all px-4 py-2.5 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white font-bold text-xs shadow-sm flex items-center space-x-1 whitespace-nowrap">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                </svg>
+                <span>Copiar</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Beneficios Auditados y Protegidos -->
+          <div class="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-900/40 text-[11px] text-neutral-700 dark:text-neutral-300 space-y-1.5">
+            <div class="font-bold text-[#0071E3] flex items-center space-x-1">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Liquidación Segura en Custodia Escrow</span>
+            </div>
+            <p class="leading-relaxed">
+              Cada pedido generado con tu QR queda vinculado en la base de datos a tu taller. TuAuto programa al repartidor express directo a tu bahía de servicio y acredita tu comisión de taller / mano de obra garantizada.
+            </p>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end">
+          <button
+            type="button"
+            (click)="mostrarModalQrTaller.set(false)"
+            class="px-5 py-2.5 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-bold shadow-md">
+            Listo
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

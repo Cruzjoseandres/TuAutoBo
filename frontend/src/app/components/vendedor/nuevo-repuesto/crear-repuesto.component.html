@@ -1,0 +1,638 @@
+<div class="space-y-6 pb-12">
+
+  <!-- Barra Superior de Navegación de Tienda -->
+  <div class="flex flex-wrap items-center justify-between gap-3 apple-card rounded-2xl p-3 shadow-sm">
+    <div class="flex items-center space-x-2 text-xs">
+      <a
+        routerLink="/vendedor"
+        class="active:scale-[0.97] transition-all inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 font-semibold">
+        <app-icon name="arrow-left" size="xs"></app-icon>
+        <span>Volver al Inventario</span>
+      </a>
+      <span class="text-neutral-300 dark:text-neutral-500">/</span>
+      <span class="font-bold text-neutral-900 dark:text-white">{{ modoEdicion() ? 'Editar Repuesto' : 'Publicar Nuevo Repuesto en Catálogo' }}</span>
+    </div>
+
+    <div class="text-xs text-neutral-500 dark:text-neutral-400">
+      Tienda activa: <strong class="text-neutral-900 dark:text-white">{{ tienda()?.nombre || 'Mi Tienda Repuestera' }}</strong>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- COLUMNA IZQUIERDA: FORMULARIO TÉCNICO COMPLETO (8 COLUMNAS) -->
+    <div class="lg:col-span-8 apple-card rounded-3xl p-7 shadow-sm space-y-6">
+
+      <div class="border-b border-black/[0.06] dark:border-white/[0.08] pb-4">
+        <h1 class="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">{{ modoEdicion() ? 'Modificar Ficha de Repuesto Automotriz' : 'Ficha de Alta de Repuesto Automotriz' }}</h1>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+          {{ modoEdicion() ? 'Actualiza especificaciones, precios o inventario físico de esta pieza.' : 'Ingresa las especificaciones técnicas, números de parte y dimensiones. Todos los campos obligatorios están marcados con asterisco (*).' }}
+        </p>
+      </div>
+
+      @if (errorGeneral()) {
+        <div class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium flex items-center space-x-2 animate-fadeIn">
+          <app-icon name="alert" size="sm"></app-icon>
+          <span>{{ errorGeneral() }}</span>
+        </div>
+      }
+
+      <form (submit)="publicarRepuesto(); $event.preventDefault()" novalidate class="space-y-6 text-xs">
+
+        <!-- 1. Identificación Técnica -->
+        <div class="space-y-3">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071E3] block">1. Identificación Técnica de la Pieza</span>
+
+          <div class="space-y-1">
+            <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">
+              Título Comercial y Técnico del Repuesto <span class="text-rose-500 font-bold ml-0.5">*</span>
+            </label>
+            <input
+              type="text"
+              [ngModel]="titulo()"
+              (ngModelChange)="onTituloChange($event)"
+              name="titulo"
+              placeholder="ej. Juego de Pastillas de Freno Delanteras Cerámicas Brembo"
+              [class.!border-rose-500]="!!errorTitulo()"
+              [class.focus:!ring-rose-500/30]="!!errorTitulo()"
+              [class.bg-rose-500/[0.03]]="!!errorTitulo()"
+              class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all"
+            />
+            @if (errorTitulo()) {
+              <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                <app-icon name="alert" size="xs"></app-icon>
+                <span>{{ errorTitulo() }}</span>
+              </p>
+            }
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center justify-between">
+                <label class="font-semibold text-neutral-700 dark:text-neutral-300 block text-xs">
+                  Código SKU (Interno) <span class="text-rose-500 font-bold ml-0.5">*</span>
+                </label>
+                <button
+                  type="button"
+                  (click)="regenerarSku()"
+                  title="Generar o recalcular código SKU automáticamente"
+                  class="text-[11px] font-semibold text-[#0071E3] hover:text-[#0077ED] dark:text-[#2997FF] flex items-center space-x-1 py-0.5 px-1.5 rounded-lg hover:bg-blue-500/10 active:scale-95 transition-all">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                  <span>{{ esSkuAuto() && sku() ? 'Regenerar SKU' : 'Auto-generar SKU' }}</span>
+                </button>
+              </div>
+              <div class="relative">
+                <input
+                  type="text"
+                  [ngModel]="sku()"
+                  (ngModelChange)="onSkuChange($event)"
+                  name="sku"
+                  placeholder="ej. BRE-FRE-04465"
+                  [class.!border-rose-500]="!!errorSku()"
+                  [class.focus:!ring-rose-500/30]="!!errorSku()"
+                  [class.bg-rose-500/[0.03]]="!!errorSku()"
+                  class="w-full px-3.5 py-2.5 rounded-xl apple-input font-mono uppercase text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all text-xs"
+                />
+                @if (esSkuAuto() && sku()) {
+                  <div class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-500/10 text-[#0071E3] dark:text-[#2997FF] text-[9px] font-mono font-bold tracking-wider">
+                      AUTO
+                    </span>
+                  </div>
+                }
+              </div>
+              @if (errorSku()) {
+                <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                  <app-icon name="alert" size="xs"></app-icon>
+                  <span>{{ errorSku() }}</span>
+                </p>
+              } @else if (esSkuAuto() && sku()) {
+                <p class="text-[10px] text-neutral-500 dark:text-neutral-400">
+                  Generado automáticamente por el sistema. Puedes editarlo libremente.
+                </p>
+              }
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">Número de Parte OEM (Fábrica)</label>
+              <input
+                type="text"
+                [ngModel]="numeroOem()"
+                (ngModelChange)="onOemChange($event)"
+                name="oem"
+                placeholder="ej. 04465-02220"
+                class="w-full px-3.5 py-2.5 rounded-xl apple-input font-mono uppercase text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <app-select
+                label="Condición / Origen"
+                placeholder="Seleccionar condición..."
+                [required]="true"
+                [options]="opcionesCondicion"
+                [ngModel]="condicion()"
+                (ngModelChange)="condicion.set($event); errorCondicion.set(null)"
+                [error]="errorCondicion() || ''"
+                name="condicion">
+              </app-select>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">Descripción Técnica y Notas de Compatibilidad</label>
+            <textarea
+              [ngModel]="descripcion()"
+              (ngModelChange)="descripcion.set($event)"
+              name="descripcion"
+              rows="3"
+              placeholder="Detalla medidas en milímetros, posición (delantero/trasero), voltaje o especificaciones de instalación..."
+              class="w-full px-3.5 py-2.5 rounded-xl apple-input text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071E3]"></textarea>
+          </div>
+        </div>
+
+        <!-- 2. Clasificación y Compatibilidad Vehicular -->
+        <div class="space-y-3 pt-3 border-t border-black/[0.06] dark:border-white/[0.08]">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071E3] block">2. Categoría, Fabricante y Vehículo Compatible</span>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <app-select
+                label="Categoría del Sistema"
+                placeholder="Seleccionar categoría..."
+                [required]="true"
+                [options]="opcionesCategorias()"
+                [ngModel]="categoriaId()"
+                (ngModelChange)="onCategoriaChange($event)"
+                [error]="errorCategoria() || ''"
+                name="categoriaId">
+              </app-select>
+            </div>
+
+            <div>
+              <app-select
+                label="Fabricante de la Pieza"
+                placeholder="Seleccionar fabricante..."
+                [required]="true"
+                [options]="opcionesFabricantes()"
+                [ngModel]="fabricanteId()"
+                (ngModelChange)="onFabricanteChange($event)"
+                [error]="errorFabricante() || ''"
+                name="fabricanteId">
+              </app-select>
+            </div>
+
+            <div>
+              <app-select
+                label="Vehículo Compatible"
+                placeholder="Seleccionar vehículo..."
+                [required]="true"
+                [options]="opcionesVehiculos()"
+                [ngModel]="vehiculoId()"
+                (ngModelChange)="onVehiculoChange($event)"
+                [error]="errorVehiculo() || ''"
+                name="vehiculoId">
+              </app-select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Precios Duales, Stock y Garantía -->
+        <div class="space-y-3 pt-3 border-t border-black/[0.06] dark:border-white/[0.08]">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071E3] block">3. Precio, Divisa Base, Stock Físico y Estado</span>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div>
+              <app-select
+                label="Moneda Base"
+                [options]="opcionesMoneda"
+                [ngModel]="monedaBase()"
+                (ngModelChange)="monedaBase.set($event)"
+                name="monedaBase">
+              </app-select>
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">
+                Precio Base ({{ monedaBase() }}) <span class="text-rose-500 font-bold ml-0.5">*</span>
+              </label>
+              <input
+                type="number"
+                step="0.5"
+                [ngModel]="precioBase()"
+                (ngModelChange)="onPrecioChange($event)"
+                name="precio"
+                placeholder="0.00"
+                [class.!border-rose-500]="!!errorPrecio()"
+                [class.focus:!ring-rose-500/30]="!!errorPrecio()"
+                [class.bg-rose-500/[0.03]]="!!errorPrecio()"
+                class="w-full px-3.5 py-2.5 rounded-xl apple-input font-bold text-neutral-900 dark:text-white transition-all"
+              />
+              @if (errorPrecio()) {
+                <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                  <app-icon name="alert" size="xs"></app-icon>
+                  <span>{{ errorPrecio() }}</span>
+                </p>
+              }
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">
+                Stock Disponible <span class="text-rose-500 font-bold ml-0.5">*</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                [ngModel]="stockDisponible()"
+                (ngModelChange)="onStockChange($event)"
+                name="stock"
+                placeholder="0"
+                [class.!border-rose-500]="!!errorStock()"
+                [class.focus:!ring-rose-500/30]="!!errorStock()"
+                [class.bg-rose-500/[0.03]]="!!errorStock()"
+                class="w-full px-3.5 py-2.5 rounded-xl apple-input font-bold text-neutral-900 dark:text-white transition-all"
+              />
+              @if (errorStock()) {
+                <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                  <app-icon name="alert" size="xs"></app-icon>
+                  <span>{{ errorStock() }}</span>
+                </p>
+              }
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">Stock Mínimo (Alerta)</label>
+              <input
+                type="number"
+                min="0"
+                [ngModel]="stockMinimo()"
+                (ngModelChange)="stockMinimo.set($event)"
+                name="stockMinimo"
+                placeholder="ej. 2"
+                class="w-full px-3.5 py-2.5 rounded-xl apple-input font-bold text-neutral-900 dark:text-white"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">Garantía (Meses)</label>
+              <input
+                type="number"
+                min="0"
+                [ngModel]="mesesGarantia()"
+                (ngModelChange)="mesesGarantia.set($event)"
+                name="garantia"
+                placeholder="ej. 6"
+                class="w-full px-3.5 py-2.5 rounded-xl apple-input font-bold text-neutral-900 dark:text-white"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">Estado en Catálogo</label>
+              <button
+                type="button"
+                (click)="estaActivo.set(!estaActivo())"
+                class="w-full px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between border transition-all"
+                [class.bg-emerald-50]="estaActivo()"
+                [class.dark:bg-emerald-950/40]="estaActivo()"
+                [class.text-emerald-700]="estaActivo()"
+                [class.dark:text-emerald-400]="estaActivo()"
+                [class.border-emerald-200]="estaActivo()"
+                [class.dark:border-emerald-800]="estaActivo()"
+                [class.bg-neutral-100]="!estaActivo()"
+                [class.dark:bg-neutral-800]="!estaActivo()"
+                [class.text-neutral-500]="!estaActivo()"
+                [class.border-neutral-200]="!estaActivo()"
+                [class.dark:border-neutral-700]="!estaActivo()">
+                <span>{{ estaActivo() ? 'Habilitado (Visible)' : 'Pausado (Oculto)' }}</span>
+                <span class="w-2.5 h-2.5 rounded-full" [class.bg-emerald-500]="estaActivo()" [class.bg-neutral-400]="!estaActivo()"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Dimensiones y Logística -->
+        <div class="space-y-3 pt-3 border-t border-black/[0.06] dark:border-white/[0.08]">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071E3] block">4. Dimensiones para Cotización Logística (Patrón Strategy)</span>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="space-y-1">
+              <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">
+                Peso Estimado (kg) <span class="text-rose-500 font-bold ml-0.5">*</span>
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0.1"
+                [ngModel]="pesoKg()"
+                (ngModelChange)="onPesoChange($event)"
+                name="peso"
+                placeholder="ej. 1.8"
+                [class.!border-rose-500]="!!errorPeso()"
+                [class.focus:!ring-rose-500/30]="!!errorPeso()"
+                [class.bg-rose-500/[0.03]]="!!errorPeso()"
+                class="w-full px-3.5 py-2.5 rounded-xl apple-input font-bold text-neutral-900 dark:text-white transition-all"
+              />
+              @if (errorPeso()) {
+                <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                  <app-icon name="alert" size="xs"></app-icon>
+                  <span>{{ errorPeso() }}</span>
+                </p>
+              }
+            </div>
+
+            <div>
+              <app-select
+                label="Tamaño de Paquete"
+                placeholder="Seleccionar tamaño..."
+                [required]="true"
+                [options]="opcionesTamano"
+                [ngModel]="tamano()"
+                (ngModelChange)="tamano.set($event); errorTamano.set(null)"
+                [error]="errorTamano() || ''"
+                name="tamano">
+              </app-select>
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-semibold text-neutral-700 dark:text-neutral-300 block">Tiempo de Preparación en Tienda (Horas)</label>
+              <input
+                type="number"
+                step="0.5"
+                min="0.5"
+                [ngModel]="tiempoEntregaHoras()"
+                (ngModelChange)="tiempoEntregaHoras.set($event)"
+                name="tiempoEntrega"
+                placeholder="ej. 1.0 (tiempo para alistar y embalar el repuesto)"
+                class="w-full px-3.5 py-2.5 rounded-xl apple-input font-bold text-neutral-900 dark:text-white"
+              />
+              <p class="text-[10px] text-neutral-400">Tiempo que demora tu local en empaquetar el producto antes de que el repartidor pase a recogerlo.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Fotografía del Repuesto (Subida Exclusiva desde Archivos) -->
+        <div class="space-y-3 pt-3 border-t border-black/[0.06] dark:border-white/[0.08]">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071E3] block">
+              5. Fotografía del Repuesto (Formato Cuadrado 1:1) <span class="text-rose-500 font-bold ml-0.5">*</span>
+            </span>
+            @if (urlImagen()) {
+              <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center space-x-1">
+                <span>✓ Fotografía cargada</span>
+              </span>
+            }
+          </div>
+
+          <!-- Selector de Archivo / Dropzone -->
+          <input
+            type="file"
+            #fileInput
+            (change)="onArchivoSeleccionado($event)"
+            accept="image/jpeg,image/png,image/webp,image/jpg"
+            class="hidden"
+          />
+
+          @if (!urlImagen()) {
+            <div
+              (click)="fileInput.click()"
+              (dragover)="onFileDragOver($event)"
+              (dragleave)="onFileDragLeave($event)"
+              (drop)="onFileDrop($event)"
+              [class.border-[#0071E3]]="isDraggingFile()"
+              [class.bg-[#0071E3]/[0.04]]="isDraggingFile()"
+              [class.!border-rose-500]="!!errorImagen()"
+              class="w-full p-8 rounded-2xl border-2 border-dashed border-black/15 dark:border-white/20 hover:border-[#0071E3] dark:hover:border-[#0071E3] transition-all cursor-pointer flex flex-col items-center justify-center text-center space-y-3 group">
+              <div class="w-14 h-14 rounded-2xl bg-black/[0.04] dark:bg-white/[0.06] group-hover:scale-105 group-hover:bg-[#0071E3]/10 text-neutral-500 group-hover:text-[#0071E3] transition-all flex items-center justify-center">
+                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+              </div>
+              <div class="space-y-1">
+                <p class="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                  Haz clic para examinar o arrastra la foto del repuesto aquí
+                </p>
+                <p class="text-[11px] text-neutral-500 dark:text-neutral-400">
+                  Formatos permitidos: JPG, PNG, WebP • Podrás recortarla en proporción 1:1 y optimizar su peso antes de subirla
+                </p>
+              </div>
+            </div>
+            @if (errorImagen()) {
+              <p class="text-[11px] text-rose-500 dark:text-rose-400 font-medium flex items-center space-x-1 mt-1 animate-fadeIn">
+                <app-icon name="alert" size="xs"></app-icon>
+                <span>{{ errorImagen() }}</span>
+              </p>
+            }
+          } @else {
+            <!-- Miniatura de Imagen Cargada con Acciones -->
+            <div class="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-14 h-14 rounded-xl overflow-hidden bg-white dark:bg-neutral-800 border border-black/10 dark:border-white/10 flex-shrink-0">
+                  <img [src]="urlImagen()" class="w-full h-full object-cover" alt="Repuesto" />
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-neutral-900 dark:text-white">Fotografía lista para el catálogo</p>
+                  <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-medium">Relación 1:1 • Optimizada para carga rápida</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button
+                  type="button"
+                  (click)="fileInput.click()"
+                  class="px-3 py-1.5 rounded-xl bg-black/[0.05] hover:bg-black/[0.09] dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-colors">
+                  Cambiar foto
+                </button>
+                <button
+                  type="button"
+                  (click)="eliminarImagen()"
+                  class="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-xs font-semibold text-rose-600 dark:text-rose-400 transition-colors">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="pt-4 flex justify-end space-x-3 border-t border-black/[0.06] dark:border-white/[0.08]">
+          <a
+            routerLink="/vendedor"
+            class="px-5 py-2.5 rounded-xl bg-black/[0.04] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-700 dark:text-neutral-300 font-semibold transition-colors">
+            Cancelar
+          </a>
+          <app-button
+            type="submit"
+            variant="primary"
+            [loading]="guardando()">
+            <span>{{ guardando() ? (modoEdicion() ? 'Guardando Cambios...' : 'Publicando en Catálogo...') : (modoEdicion() ? 'Guardar Cambios' : 'Publicar Repuesto en el Catálogo') }}</span>
+          </app-button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- COLUMNA DERECHA: VISTA PREVIA EN VIVO DE LA TARJETA (4 COLUMNAS) -->
+    <div class="lg:col-span-4 lg:sticky lg:top-20 space-y-4">
+      <div class="apple-card rounded-3xl p-5 shadow-sm space-y-4">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 block">Vista Previa en el Catálogo</span>
+
+        <!-- Contenedor Cuadrado 1:1 de Imagen en la Tarjeta -->
+        <div class="w-full aspect-square rounded-2xl overflow-hidden bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] relative">
+          @if (urlImagen()) {
+            <img
+              [src]="urlImagen()"
+              class="w-full h-full object-cover transition-all"
+              alt="Preview"
+            />
+            <div class="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-semibold shadow-sm">
+              {{ stockDisponible() ?? 0 }} disponibles
+            </div>
+          } @else {
+            <div class="w-full h-full flex flex-col items-center justify-center text-center p-6 space-y-2">
+              <div class="w-12 h-12 rounded-2xl bg-black/[0.04] dark:bg-white/[0.08] flex items-center justify-center text-neutral-500 dark:text-neutral-400">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+              </div>
+              <p class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">Sin fotografía seleccionada</p>
+              <p class="text-[10px] text-neutral-500 dark:text-neutral-400">Sube una imagen 1:1 para previsualizar cómo la verá el comprador</p>
+            </div>
+          }
+        </div>
+
+        <div>
+          <h3 class="text-sm font-bold text-neutral-900 dark:text-white line-clamp-2">
+            {{ titulo() || 'Título del Repuesto Automotriz' }}
+          </h3>
+          <p class="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono mt-0.5">
+            SKU: {{ sku() || '—' }} • OEM: <strong class="text-[#0071E3]">{{ numeroOem() || '—' }}</strong>
+          </p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.04] dark:border-white/[0.08] text-xs space-y-1">
+          <div class="flex justify-between font-semibold text-neutral-900 dark:text-white">
+            <span>{{ tienda()?.nombre || 'Mi Repuestera' }}</span>
+            @if (tienda()?.total_resenas && tienda()!.total_resenas! > 0) {
+              <span class="text-amber-500 flex items-center space-x-1">
+                <span>{{ tienda()?.calificacion?.toFixed(1) }}</span>
+                <app-icon name="star" size="xs"></app-icon>
+              </span>
+            } @else {
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
+                Nuevo
+              </span>
+            }
+          </div>
+          <div class="flex justify-between text-[11px] text-neutral-500 dark:text-neutral-400">
+            <span>Peso: {{ pesoKg() || '0' }} kg ({{ tamano() || 'Tamaño sin definir' }})</span>
+            <span>{{ mesesGarantia() || '0' }}m garantía</span>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-black/[0.06] dark:border-white/[0.08] flex items-baseline justify-between">
+          <div>
+            <span class="text-xl font-extrabold text-neutral-900 dark:text-white">Bs {{ precioCalculadoBob().toFixed(2) }}</span>
+            <span class="text-[11px] text-neutral-500 dark:text-neutral-400 block">Equivalente: $ {{ precioCalculadoUsd().toFixed(2) }} USD</span>
+          </div>
+          <span class="px-2.5 py-1 rounded-md bg-blue-500/10 text-[#0071E3] text-[10px] font-bold">
+            Custodia Escrow
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL APPLE DE RECORTE 1:1 Y COMPRESIÓN INTELIGENTE      -->
+<!-- ======================================================== -->
+@if (mostrarModalRecorte()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fadeIn">
+    <div class="w-full max-w-md apple-card rounded-3xl p-6 shadow-2xl border border-black/10 dark:border-white/10 space-y-5 animate-scale-pop">
+
+      <div class="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
+        <div>
+          <h3 class="text-base font-bold text-neutral-900 dark:text-white">Ajustar y Optimizar Fotografía</h3>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">Encuadre cuadrado 1:1 para el catálogo</p>
+        </div>
+        <button
+          type="button"
+          (click)="cerrarModalRecorte()"
+          class="p-1 rounded-xl text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Lienzo de Vista Previa 1:1 -->
+      <div class="flex flex-col items-center justify-center space-y-3">
+        <div class="relative w-[300px] h-[300px] rounded-2xl overflow-hidden shadow-inner border-2 border-[#0071E3]/40 bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+          <canvas id="previewCropCanvas" class="w-[300px] h-[300px] object-cover"></canvas>
+          <div class="absolute inset-0 pointer-events-none border border-white/20 rounded-2xl"></div>
+        </div>
+
+        <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+          </svg>
+          <span>{{ tamanoOptimizadoKb() }} KB • Optimizado para subida ultrarrápida</span>
+        </div>
+      </div>
+
+      <!-- Controles de Edición: Zoom y Rotación -->
+      <div class="space-y-3 pt-2 border-t border-black/[0.06] dark:border-white/[0.08] text-xs">
+        <div class="space-y-1">
+          <div class="flex justify-between font-semibold text-neutral-700 dark:text-neutral-300">
+            <span>Acercar / Alejar (Zoom)</span>
+            <span>{{ zoom().toFixed(1) }}x</span>
+          </div>
+          <input
+            type="range"
+            min="0.8"
+            max="2.5"
+            step="0.05"
+            [ngModel]="zoom()"
+            (ngModelChange)="onZoomChange($event)"
+            class="w-full accent-[#0071E3] cursor-pointer"
+          />
+        </div>
+
+        <div class="flex items-center justify-between">
+          <button
+            type="button"
+            (click)="rotar90()"
+            class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 font-semibold transition-colors">
+            <svg class="w-4 h-4 text-neutral-500 dark:text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            <span>Girar 90° (Orientación)</span>
+          </button>
+
+          <span class="text-[11px] text-neutral-500 dark:text-neutral-400">
+            Rotación: {{ rotacion() }}°
+          </span>
+        </div>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="pt-3 flex justify-end space-x-2.5 border-t border-black/[0.06] dark:border-white/[0.08]">
+        <button
+          type="button"
+          (click)="cerrarModalRecorte()"
+          class="px-4 py-2.5 rounded-xl bg-black/[0.04] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-xs font-semibold text-neutral-700 dark:text-neutral-300 transition-colors">
+          Cancelar
+        </button>
+        <app-button
+          variant="primary"
+          [loading]="subiendoImagen()"
+          (click)="guardarImagenAjustada()">
+          <span>{{ subiendoImagen() ? 'Guardando...' : 'Aplicar y Usar Fotografía' }}</span>
+        </app-button>
+      </div>
+
+    </div>
+  </div>
+}

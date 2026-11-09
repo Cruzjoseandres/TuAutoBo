@@ -1,0 +1,23 @@
+# Dependencias
+node_modules/
+
+# Compilación
+dist/
+
+# Variables de entorno
+.env
+.env.*
+*.env
+*.env.*
+!.env.example
+
+# Base de datos y volcados SQL
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+src/seed/
+
+# Logs y uploads
+npm-debug.log*
+uploads/

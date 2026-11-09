@@ -1,0 +1,61 @@
+# ==============================================================================
+# TUAUTO BOLIVIA - GITIGNORE GLOBAL
+# ==============================================================================
+
+# Dependencias
+node_modules/
+*/node_modules/
+
+# Archivos de Entorno y Credenciales (PROHIBIDO SUBIR)
+.env
+.env.*
+*.env
+*.env.*
+!.env.example
+!*/.env.example
+
+# Archivos SQL, Volcados de Base de Datos y Datos Semilla
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+backend/src/seed/
+**/seed/
+limpiar_base_de_datos.sql
+limpiar_db.js
+backend/limpiar_db.js
+
+# Carpetas de Compilación y Bundles
+dist/
+build/
+.angular/
+out-tsc/
+bazel-out/
+
+# Archivos multimedia temporales y uploads locales
+uploads/
+backend/uploads/
+*/uploads/
+
+# Herramientas de IA, Agentes, Memoria y Logs Locales
+.agents/
+.engram/
+.gemini/
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Documentación Académica y Colecciones de Prueba
+docs/
+*.docx
+*.pdf
+tuauto-postman-collection.json
+scripts/
+
+# Archivos del Sistema Operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
