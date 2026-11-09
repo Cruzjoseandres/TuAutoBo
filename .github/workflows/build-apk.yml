@@ -56,7 +56,7 @@ jobs:
         run: |
           cd frontend/android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: 9. Preparar Archivo TuAuto.apk
         run: |
