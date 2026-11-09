@@ -15,3 +15,4 @@ export * from './mensajes.service';
 export * from './theme.service';
 export * from './toast.service';
 export * from './ubicacion.service';
+export * from './version-check.service';

@@ -8,6 +8,7 @@ import { VendedorComponent } from './components/vendedor/vendedor.component';
 import { CrearRepuestoComponent } from './components/vendedor/nuevo-repuesto/crear-repuesto.component';
 import { RepartidorComponent } from './components/repartidor/repartidor.component';
 import { AdminComponent } from './components/admin/admin.component';
+import { DescargarAppComponent } from './components/descargar-app/descargar-app.component';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 
@@ -92,6 +93,10 @@ export const routes: Routes = [
     component: AdminComponent,
     canActivate: [authGuard, roleGuard],
     data: { rol: 'ADMINISTRADOR' },
+  },
+  {
+    path: 'descargar-app',
+    component: DescargarAppComponent,
   },
   {
     path: '**',

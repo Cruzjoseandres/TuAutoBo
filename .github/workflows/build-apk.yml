@@ -1,0 +1,93 @@
+name: Compilar y Publicar APK Android (TuAuto)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/build-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    name: Compilar APK Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Descargar Código del Repositorio
+        uses: actions/checkout@v4
+
+      - name: 2. Configurar Entorno Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 3. Instalar Dependencias del Frontend
+        run: |
+          cd frontend
+          npm install
+
+      - name: 4. Compilar Frontend Angular (Producción)
+        run: |
+          cd frontend
+          npm run build
+
+      - name: 5. Configurar JDK 17 (Java)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: 6. Configurar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 7. Sincronizar Capacitor con Proyecto Android
+        run: |
+          cd frontend
+          npx cap sync android
+
+      - name: 8. Compilar APK con Gradle
+        run: |
+          cd frontend/android
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: 9. Preparar Archivo TuAuto.apk
+        run: |
+          cp frontend/android/app/build/outputs/apk/debug/app-debug.apk ./TuAuto.apk
+
+      - name: 10. Subir Artefacto a GitHub Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: TuAuto-Android-APK
+          path: TuAuto.apk
+          retention-days: 14
+
+      - name: 11. Publicar / Actualizar Release "latest" en GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "TuAuto Bolivia APK Oficial (Última Versión)"
+          body: |
+            ## 🚗 TuAuto Bolivia — Aplicación Oficial para Android
+            
+            Este archivo APK se compila automáticamente cada vez que se realiza una mejora o actualización en la aplicación.
+
+            ### 📲 Instrucciones de Instalación:
+            1. Descarga el archivo **`TuAuto.apk`** que aparece abajo en los Assets.
+            2. En tu celular Android, abre el archivo descargado.
+            3. Si tu teléfono te pide permiso para instalar aplicaciones de fuentes desconocidas, presiona **Configuración** y activa la casilla.
+            4. Toca **Instalar** (o **Actualizar** si ya la tenías instalada, sin perder tus datos).
+            5. Inicia sesión como Comprador, Vendedor o Repartidor.
+          files: TuAuto.apk
+          prerelease: false
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

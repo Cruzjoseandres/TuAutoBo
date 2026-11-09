@@ -21,6 +21,29 @@ export class ParametrosController {
     return this.parametrosService.findAll();
   }
 
+  @Get('app-version')
+  @ApiOperation({ summary: 'Consultar versión oficial de la aplicación móvil APK (Público)' })
+  async getAppVersion() {
+    const version = await this.parametrosService.obtener('APP_VERSION_ANDROID', '1.0.0');
+    const apkUrl = await this.parametrosService.obtener(
+      'APP_APK_URL',
+      'https://github.com/Cruzjoseandres/TuAutoBo/releases/latest/download/TuAuto.apk',
+    );
+    const novedades = await this.parametrosService.obtener(
+      'APP_NOVEDADES_ACTUALIZACION',
+      'Nueva versión con optimización de mapas GPS, cotización de envíos y catálogo automotriz en vivo.',
+    );
+    const obligatoria = (await this.parametrosService.obtener('APP_ACTUALIZACION_OBLIGATORIA', 'false')) === 'true';
+
+    return {
+      version,
+      apk_url: apkUrl,
+      novedades,
+      obligatoria,
+      fecha_actualizacion: new Date().toISOString(),
+    };
+  }
+
   @Get(':clave')
   @Roles(RolEnum.ADMINISTRADOR)
   @ApiOperation({ summary: 'Obtener el valor y descripción de un parámetro específico' })
