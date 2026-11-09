@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface DireccionComprador {
   id: string;
@@ -19,7 +20,7 @@ export interface DireccionComprador {
 export class UbicacionService {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
-  private readonly apiUrl = 'http://localhost:3000/api/usuarios';
+  private readonly apiUrl = `${environment.apiUrl}/usuarios`;
 
   // Direcciones reales del comprador (sin datos mock)
   direcciones = signal<DireccionComprador[]>([]);

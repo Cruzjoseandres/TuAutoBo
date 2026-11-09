@@ -2,13 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Repartidor } from '../models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class RepartidoresService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/repartidores';
+  private readonly apiUrl = `${environment.apiUrl}/repartidores`;
 
   findAll(): Observable<Repartidor[]> {
     return this.http.get<Repartidor[]>(this.apiUrl);

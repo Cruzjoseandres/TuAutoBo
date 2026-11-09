@@ -2,13 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Tienda } from '../models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TiendasService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/tiendas';
+  private readonly apiUrl = `${environment.apiUrl}/tiendas`;
 
   findAll(): Observable<Tienda[]> {
     return this.http.get<Tienda[]>(this.apiUrl);

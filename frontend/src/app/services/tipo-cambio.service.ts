@@ -2,13 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { TipoCambio } from '../models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TipoCambioService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/tipo-cambio';
+  private readonly apiUrl = `${environment.apiUrl}/tipo-cambio`;
 
   obtenerRegistro(): Observable<TipoCambio> {
     return this.http.get<TipoCambio>(this.apiUrl);

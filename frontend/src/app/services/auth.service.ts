@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { Usuario, RespuestaAuth } from '../models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -10,7 +11,7 @@ import { Usuario, RespuestaAuth } from '../models';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly apiUrl = 'http://localhost:3000/api/usuarios';
+  private readonly apiUrl = `${environment.apiUrl}/usuarios`;
 
   // Signals reactivos para el estado del usuario
   readonly usuarioActual = signal<Usuario | null>(null);

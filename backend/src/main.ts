@@ -25,9 +25,39 @@ async function bootstrap() {
   // 1. Prefijo Global para la API
   app.setGlobalPrefix('api');
 
-  // 2. Habilitar CORS para Angular (puerto 4200), localhost y Capacitor
+  // 2. CORS Seguro: Whitelist estricta para Cloudflare Pages, Localhost y Apps Móviles
+  const frontendUrl = process.env.FRONTEND_URL;
+  const origenesPermitidos: (string | RegExp)[] = [
+    'http://localhost:4200',
+    'http://localhost:3000',
+    'http://127.0.0.1:4200',
+    'http://127.0.0.1:3000',
+    'capacitor://localhost',
+    'https://localhost',
+    /\.pages\.dev$/, // Todos los subdominios legítimos de Cloudflare Pages (ej: tuautobo.pages.dev)
+  ];
+  if (frontendUrl) {
+    origenesPermitidos.push(frontendUrl);
+  }
+
   app.enableCors({
-    origin: true,
+    origin: (origin, callback) => {
+      // Permitir peticiones sin origin (como apps móviles Android/iOS nativas, Postman, etc.)
+      if (!origin) return callback(null, true);
+
+      const permitido = origenesPermitidos.some((permitido) => {
+        if (typeof permitido === 'string') return permitido === origin;
+        if (permitido instanceof RegExp) return permitido.test(origin);
+        return false;
+      });
+
+      if (permitido) {
+        callback(null, true);
+      } else {
+        logger.warn(`🚫 CORS Bloqueado para origen no autorizado: ${origin}`);
+        callback(new Error(`CORS no permitido para el origen: ${origin}`));
+      }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });

@@ -2,13 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Fabricante } from '../models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FabricantesService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/fabricantes';
+  private readonly apiUrl = `${environment.apiUrl}/fabricantes`;
 
   findAll(): Observable<Fabricante[]> {
     return this.http.get<Fabricante[]>(this.apiUrl);

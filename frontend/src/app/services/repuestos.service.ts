@@ -2,13 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Repuesto, ResenaRepuesto, RespuestaPaginadaRepuestos } from '../models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class RepuestosService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3000/api/repuestos';
+  private readonly apiUrl = `${environment.apiUrl}/repuestos`;
 
   private construirParams(filtros?: {
     marca_id?: number;
@@ -106,7 +107,7 @@ export class RepuestosService {
     const formData = new FormData();
     formData.append('imagen', archivo, nombreArchivo);
     return this.http.post<{ url: string; filename: string; size: number }>(
-      'http://localhost:3000/api/upload/repuesto',
+      `${environment.apiUrl}/upload/repuesto`,
       formData,
     );
   }
