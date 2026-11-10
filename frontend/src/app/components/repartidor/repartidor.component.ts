@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
@@ -7,6 +7,7 @@ import {
   RepartidoresService,
   PedidosService,
   ToastService,
+  NavigationContextService,
 } from '../../services';
 import { Repartidor, Pedido } from '../../models';
 import { CustomSelectComponent, SelectOption } from '../shared/custom-select.component';
@@ -21,6 +22,8 @@ type TabRepartidor = 'disponibles' | 'en-curso' | 'historial';
 })
 export class RepartidorComponent implements OnInit {
   protected readonly auth = inject(AuthService);
+  protected readonly navContext = inject(NavigationContextService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly repartidoresService = inject(RepartidoresService);
   private readonly pedidosService = inject(PedidosService);
@@ -56,6 +59,15 @@ export class RepartidorComponent implements OnInit {
 
   ngOnInit() {
     this.cargarPerfilRepartidor();
+
+    const unregisterModalCapacidad = this.navContext.registrarCerradorModal(() => {
+      if (this.modalCapacidadAbierto()) {
+        this.modalCapacidadAbierto.set(false);
+        return true;
+      }
+      return false;
+    });
+    this.destroyRef.onDestroy(() => unregisterModalCapacidad());
 
     // Sincronización de ruta activa /repartidor/:tab y refresco en demanda
     this.route.paramMap.subscribe((params) => {

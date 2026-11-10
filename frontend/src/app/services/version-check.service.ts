@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Capacitor } from '@capacitor/core';
 import { environment } from '../../environments/environment';
 
 export interface InfoVersionApp {
@@ -19,6 +20,9 @@ export class VersionCheckService {
   // Versión local actual instalada en la aplicación
   readonly VERSION_ACTUAL = '1.0.0';
 
+  // Detecta si se está ejecutando dentro del contenedor nativo APK Android (Capacitor)
+  readonly esAppNativa = signal<boolean>(this.detectarPlataformaNativa());
+
   // Signals reactivos
   readonly comprobando = signal<boolean>(false);
   readonly hayNuevaVersion = signal<boolean>(false);
@@ -27,6 +31,25 @@ export class VersionCheckService {
 
   constructor() {
     this.verificarVersion();
+  }
+
+  private detectarPlataformaNativa(): boolean {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        return true;
+      }
+      if (typeof window !== 'undefined') {
+        const ua = window.navigator.userAgent || '';
+        const esWebViewAndroid = /;\s*wv\)/.test(ua) || (/Android/i.test(ua) && /Version\/[\d.]+/i.test(ua));
+        const capGlobal = (window as any).Capacitor;
+        if (capGlobal?.isNativePlatform?.() || esWebViewAndroid) {
+          return true;
+        }
+      }
+    } catch {
+      // Fallback silencioso
+    }
+    return false;
   }
 
   verificarVersion(): void {
@@ -53,18 +76,18 @@ export class VersionCheckService {
   }
 
   cerrarModal(): void {
-    // Si no es obligatoria, se puede descartar
     if (!this.infoActualizacion()?.obligatoria) {
       this.modalVisible.set(false);
     }
   }
 
   descargarInstalador(): void {
-    const url = this.infoActualizacion()?.apk_url || 'https://github.com/Cruzjoseandres/TuAutoBo/releases/latest/download/TuAuto.apk';
+    const url =
+      this.infoActualizacion()?.apk_url ||
+      'https://github.com/Cruzjoseandres/TuAutoBo/releases/latest/download/TuAuto.apk';
     window.open(url, '_system');
   }
 
-  // Compara dos versiones semánticas (ej: '1.0.1' vs '1.0.0')
   private esVersionMayor(versionServidor: string, versionLocal: string): boolean {
     if (!versionServidor || !versionLocal) return false;
     const vServidor = versionServidor.split('.').map((n) => parseInt(n, 10) || 0);
@@ -79,4 +102,3 @@ export class VersionCheckService {
     return false;
   }
 }
-

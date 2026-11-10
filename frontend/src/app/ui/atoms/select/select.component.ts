@@ -52,10 +52,7 @@ export interface SelectOption {
         class="w-full px-3.5 py-2.5 rounded-xl apple-input text-xs flex items-center justify-between text-left transition-all active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-[#0071E3] disabled:opacity-50 disabled:cursor-not-allowed">
         <span 
           class="truncate font-medium"
-          [class.text-neutral-900]="selectedOption()"
-          [class.dark:text-white]="selectedOption()"
-          [class.text-neutral-400]="!selectedOption()"
-          [class.dark:text-neutral-500]="!selectedOption()">
+          [ngClass]="selectedOption() ? 'text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'">
           {{ selectedLabel() }}
         </span>
 
@@ -77,21 +74,16 @@ export interface SelectOption {
             <button
               type="button"
               (click)="select(opt)"
-              [class.bg-[#0071E3]]="isSelected(opt)"
-              [class.text-white]="isSelected(opt)"
-              [class.text-neutral-900]="!isSelected(opt)"
-              [class.dark:text-neutral-200]="!isSelected(opt)"
-              [class.hover:bg-black/[0.05]]="!isSelected(opt)"
-              [class.dark:hover:bg-white/[0.08]]="!isSelected(opt)"
+              [ngClass]="isSelected(opt)
+                ? 'bg-[#0071E3] text-white'
+                : 'text-neutral-900 dark:text-neutral-100 hover:bg-black/[0.05] dark:hover:bg-white/[0.08]'"
               class="w-full text-left px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between transition-colors">
               <div class="flex flex-col pr-2 truncate">
                 <span class="truncate font-semibold">{{ opt.label }}</span>
                 @if (opt.hint) {
                   <span 
                     class="text-[10px] truncate"
-                    [class.text-blue-100]="isSelected(opt)"
-                    [class.text-neutral-500]="!isSelected(opt)"
-                    [class.dark:text-neutral-400]="!isSelected(opt)">
+                    [ngClass]="isSelected(opt) ? 'text-blue-100' : 'text-neutral-500 dark:text-neutral-400'">
                     {{ opt.hint }}
                   </span>
                 }

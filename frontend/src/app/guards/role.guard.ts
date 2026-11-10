@@ -13,7 +13,5 @@ export const roleGuard: CanActivateFn = (route) => {
     return true;
   }
 
-  // Redirigir a la vista de su propio rol si intenta ingresar a otra
-  auth.redirigirSegunRol();
-  return false;
+  return router.createUrlTree(auth.obtenerRutaPrincipalPorRol());
 };

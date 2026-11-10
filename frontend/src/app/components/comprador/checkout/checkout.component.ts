@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   AuthService,
   RepuestosService,
@@ -9,6 +9,7 @@ import {
   TipoCambioService,
   ToastService,
   UbicacionService,
+  NavigationContextService,
 } from '../../../services';
 import { Repuesto, Pedido } from '../../../models';
 import { CustomSelectComponent, SelectOption } from '../../shared/custom-select.component';
@@ -16,12 +17,13 @@ import { CustomSelectComponent, SelectOption } from '../../shared/custom-select.
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CustomSelectComponent],
+  imports: [CommonModule, FormsModule, CustomSelectComponent],
   templateUrl: './checkout.component.html',
 })
 export class CheckoutComponent implements OnInit {
   protected readonly auth = inject(AuthService);
   protected readonly ubicacion = inject(UbicacionService);
+  protected readonly navContext = inject(NavigationContextService);
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -44,7 +46,7 @@ export class CheckoutComponent implements OnInit {
   distanciaKm = signal<number>(0);
 
   // Moneda y Método de Pago
-  monedaPago = signal<'BOB' | 'USD'>('BOB');
+  monedaPago = signal<'BOB' | 'USD'>(this.navContext.contextoCatalogo().moneda || 'BOB');
   metodoPago = signal<'QR_SIMPLE' | 'TARJETA_DEBITO_CREDITO'>('QR_SIMPLE');
   tasaDolar = signal<number>(6.96);
 
@@ -226,6 +228,15 @@ export class CheckoutComponent implements OnInit {
           this.toast.error('Error al generar la orden de compra.');
         },
       });
+  }
+
+  volver() {
+    const id = this.repuesto()?.id;
+    this.navContext.volver(id ? ['/comprador/repuesto', id] : ['/comprador', 'catalogo']);
+  }
+
+  irAMisPedidos() {
+    this.router.navigate(['/comprador', 'pedidos'], { replaceUrl: true });
   }
 
   confirmarPagoEscrow() {

@@ -9,6 +9,7 @@ import {
   MensajesService,
   TipoCambioService,
   ToastService,
+  NavigationContextService,
 } from '../../../services';
 import { Repuesto, ResenaRepuesto, Tienda, Mensaje } from '../../../models';
 import { IconComponent } from '../../../ui';
@@ -21,6 +22,7 @@ import { IconComponent } from '../../../ui';
 })
 export class DetalleRepuestoComponent implements OnInit {
   protected readonly auth = inject(AuthService);
+  protected readonly navContext = inject(NavigationContextService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly repuestosService = inject(RepuestosService);
@@ -36,7 +38,7 @@ export class DetalleRepuestoComponent implements OnInit {
   cargando = signal<boolean>(true);
   cantidad = signal<number>(1);
 
-  moneda = signal<'BOB' | 'USD'>('BOB');
+  moneda = signal<'BOB' | 'USD'>(this.navContext.contextoCatalogo().moneda || 'BOB');
   tasaDolar = signal<number>(6.96);
 
   // Pestaña activa inferior: 'empresa' | 'talleres' | 'resenas' | 'chat' | 'comparador'
@@ -216,6 +218,16 @@ export class DetalleRepuestoComponent implements OnInit {
         inp.focus();
       }
     }, 100);
+  }
+
+  volver() {
+    this.navContext.volver(['/comprador', 'catalogo']);
+  }
+
+  toggleMoneda() {
+    const nueva = this.moneda() === 'BOB' ? 'USD' : 'BOB';
+    this.moneda.set(nueva);
+    this.navContext.guardarEstadoCatalogo({ moneda: nueva });
   }
 
   irAPagar(repuestoId?: string) {

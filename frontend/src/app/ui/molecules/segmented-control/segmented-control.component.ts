@@ -44,18 +44,10 @@ export interface SegmentOption {
             type="button"
             (click)="select(opt)"
             [disabled]="disabled()"
-            [class.bg-white]="isSelected(opt)"
-            [class.dark:bg-[#1C1C1E]]="isSelected(opt)"
-            [class.text-neutral-900]="isSelected(opt)"
-            [class.dark:text-white]="isSelected(opt)"
-            [class.shadow-sm]="isSelected(opt)"
-            [class.font-bold]="isSelected(opt)"
-            [class.text-neutral-600]="!isSelected(opt)"
-            [class.dark:text-neutral-400]="!isSelected(opt)"
-            [class.font-medium]="!isSelected(opt)"
-            [class.hover:text-neutral-900]="!isSelected(opt)"
-            [class.dark:hover:text-white]="!isSelected(opt)"
-            class="flex-1 py-2 px-3 rounded-xl text-xs flex items-center justify-center space-x-1.5 transition-all duration-150 active:scale-[0.98] disabled:opacity-50">
+            [ngClass]="isSelected(opt)
+              ? 'bg-white dark:bg-[#2C2C2E] text-neutral-900 dark:text-white shadow-sm font-bold'
+              : 'text-neutral-600 dark:text-neutral-300 font-medium hover:text-neutral-900 dark:hover:text-white'"
+            class="flex-1 py-2 px-3 rounded-xl text-xs flex items-center justify-center space-x-1.5 transition-transform duration-150 active:scale-[0.98] disabled:opacity-50">
             @if (opt.icon) {
               <app-icon [name]="opt.icon" size="sm"></app-icon>
             }

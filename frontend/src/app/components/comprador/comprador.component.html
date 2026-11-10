@@ -6,13 +6,7 @@
       <div class="inline-flex p-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.02]">
         <a 
           [routerLink]="['/comprador', 'catalogo']"
-          [class.bg-white]="seccionActiva() === 'catalogo'"
-          [class.dark:bg-[#2C2C2E]]="seccionActiva() === 'catalogo'"
-          [class.text-neutral-900]="seccionActiva() === 'catalogo'"
-          [class.dark:text-white]="seccionActiva() === 'catalogo'"
-          [class.shadow-sm]="seccionActiva() === 'catalogo'"
-          [class.text-neutral-500]="seccionActiva() !== 'catalogo'"
-          [class.dark:text-neutral-400]="seccionActiva() !== 'catalogo'"
+          [ngClass]="seccionActiva() === 'catalogo' ? 'bg-white dark:bg-[#2C2C2E] text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400'"
           class="active:scale-[0.98] transition-all duration-150 px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2">
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -22,13 +16,7 @@
 
         <a 
           [routerLink]="['/comprador', 'pedidos']"
-          [class.bg-white]="seccionActiva() === 'pedidos'"
-          [class.dark:bg-[#2C2C2E]]="seccionActiva() === 'pedidos'"
-          [class.text-neutral-900]="seccionActiva() === 'pedidos'"
-          [class.dark:text-white]="seccionActiva() === 'pedidos'"
-          [class.shadow-sm]="seccionActiva() === 'pedidos'"
-          [class.text-neutral-500]="seccionActiva() !== 'pedidos'"
-          [class.dark:text-neutral-400]="seccionActiva() !== 'pedidos'"
+          [ngClass]="seccionActiva() === 'pedidos' ? 'bg-white dark:bg-[#2C2C2E] text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400'"
           class="active:scale-[0.98] transition-all duration-150 px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2">
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
@@ -113,7 +101,7 @@
             <input 
               type="text"
               [(ngModel)]="busqueda"
-              (ngModelChange)="paginaActual.set(1); cargarRepuestos()"
+              (ngModelChange)="onBusquedaChange($event)"
               placeholder="Buscar por repuesto, código OEM (ej. 04465-02220) o SKU..."
               class="w-full pl-9 pr-4 py-2.5 rounded-xl apple-input text-xs focus:outline-none"
             />
@@ -141,28 +129,14 @@
         <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar pt-1">
           <button 
             (click)="seleccionarCategoria(null)"
-            [class.bg-neutral-900]="categoriaId() === null"
-            [class.dark:bg-white]="categoriaId() === null"
-            [class.text-white]="categoriaId() === null"
-            [class.dark:text-neutral-900]="categoriaId() === null"
-            [class.bg-neutral-100]="categoriaId() !== null"
-            [class.dark:bg-neutral-800]="categoriaId() !== null"
-            [class.text-neutral-700]="categoriaId() !== null"
-            [class.dark:text-neutral-300]="categoriaId() !== null"
+            [ngClass]="categoriaId() === null ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'"
             class="active:scale-[0.98] px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0">
             Todas las Categorías
           </button>
           @for (cat of categorias(); track cat.id) {
             <button 
               (click)="seleccionarCategoria(cat.id)"
-              [class.bg-neutral-900]="categoriaId() === cat.id"
-              [class.dark:bg-white]="categoriaId() === cat.id"
-              [class.text-white]="categoriaId() === cat.id"
-              [class.dark:text-neutral-900]="categoriaId() === cat.id"
-              [class.bg-neutral-100]="categoriaId() !== cat.id"
-              [class.dark:bg-neutral-800]="categoriaId() !== cat.id"
-              [class.text-neutral-700]="categoriaId() !== cat.id"
-              [class.dark:text-neutral-300]="categoriaId() !== cat.id"
+              [ngClass]="categoriaId() === cat.id ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'"
               class="active:scale-[0.98] px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex-shrink-0">
               {{ cat.nombre }}
             </button>
@@ -185,7 +159,7 @@
         <div class="apple-card rounded-3xl p-12 text-center space-y-3">
           <p class="text-sm font-bold text-neutral-900 dark:text-white">No hay repuestos para los filtros aplicados</p>
           <p class="text-xs text-neutral-500 dark:text-neutral-400">Prueba cambiando de categoría o quitando el filtro de vehículo.</p>
-          <button (click)="seleccionarCategoria(null); onClearVehiculo(); busqueda.set(''); cargarRepuestos()" class="px-4 py-2 rounded-xl bg-[#0071E3] text-white text-xs font-semibold">
+          <button (click)="seleccionarCategoria(null); onClearVehiculo(); onBusquedaChange('')" class="px-4 py-2 rounded-xl bg-[#0071E3] text-white text-xs font-semibold">
             Restablecer búsqueda
           </button>
         </div>
@@ -515,14 +489,7 @@
               @for (mod of modelos(); track mod.id) {
                 <button 
                   (click)="onSelectModelo(mod.id)"
-                  [class.bg-neutral-900]="modeloTemp() === mod.id"
-                  [class.dark:bg-white]="modeloTemp() === mod.id"
-                  [class.text-white]="modeloTemp() === mod.id"
-                  [class.dark:text-neutral-900]="modeloTemp() === mod.id"
-                  [class.bg-neutral-50]="modeloTemp() !== mod.id"
-                  [class.dark:bg-neutral-800]="modeloTemp() !== mod.id"
-                  [class.text-neutral-800]="modeloTemp() !== mod.id"
-                  [class.dark:text-neutral-200]="modeloTemp() !== mod.id"
+                  [ngClass]="modeloTemp() === mod.id ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900' : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200'"
                   class="p-2 rounded-xl border border-black/[0.04] dark:border-white/[0.06] text-xs font-semibold text-center transition-all">
                   {{ mod.nombre }}
                 </button>

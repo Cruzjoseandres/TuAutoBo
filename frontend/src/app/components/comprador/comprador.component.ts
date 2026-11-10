@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -12,6 +12,7 @@ import {
   PedidosService,
   TipoCambioService,
   UbicacionService,
+  NavigationContextService,
 } from '../../services';
 import {
   Marca,
@@ -29,9 +30,10 @@ import { CustomSelectComponent, SelectOption } from '../shared/custom-select.com
   imports: [CommonModule, FormsModule, RouterLink, CustomSelectComponent],
   templateUrl: './comprador.component.html',
 })
-export class CompradorComponent implements OnInit {
+export class CompradorComponent implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
   protected readonly ubicacion = inject(UbicacionService);
+  protected readonly navContext = inject(NavigationContextService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly marcasService = inject(MarcasService);
@@ -41,6 +43,8 @@ export class CompradorComponent implements OnInit {
   private readonly repuestosService = inject(RepuestosService);
   private readonly pedidosService = inject(PedidosService);
   private readonly tipoCambioService = inject(TipoCambioService);
+
+  private desregistrarModal?: () => void;
 
   // Pestañas del comprador
   seccionActiva = signal<'catalogo' | 'pedidos'>('catalogo');
@@ -90,6 +94,20 @@ export class CompradorComponent implements OnInit {
   cargandoManual = signal<boolean>(false);
 
   ngOnInit() {
+    // Restaurar filtros del contexto si el usuario regresó desde Detalle o Checkout
+    const ctx = this.navContext.contextoCatalogo();
+    if (ctx.busqueda) this.busqueda.set(ctx.busqueda);
+    if (ctx.categoriaId !== null) this.categoriaId.set(ctx.categoriaId);
+    if (ctx.moneda) this.moneda.set(ctx.moneda);
+
+    this.desregistrarModal = this.navContext.registrarCerradorModal(() => {
+      if (this.modalGarajeAbierto()) {
+        this.modalGarajeAbierto.set(false);
+        return true;
+      }
+      return false;
+    });
+
     this.cargarDatos();
 
     // Sincronización de ruta activa /comprador/:tab y refresco en demanda
@@ -104,6 +122,10 @@ export class CompradorComponent implements OnInit {
         }
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.desregistrarModal?.();
   }
 
   refrescarManual() {
@@ -133,6 +155,14 @@ export class CompradorComponent implements OnInit {
   seleccionarCategoria(id: number | null) {
     this.categoriaId.set(id);
     this.paginaActual.set(1);
+    this.navContext.guardarEstadoCatalogo({ categoriaId: id });
+    this.cargarRepuestos();
+  }
+
+  onBusquedaChange(valor: string) {
+    this.busqueda.set(valor);
+    this.paginaActual.set(1);
+    this.navContext.guardarEstadoCatalogo({ busqueda: valor });
     this.cargarRepuestos();
   }
 
@@ -201,6 +231,7 @@ export class CompradorComponent implements OnInit {
     this.vehiculoSeleccionado.set(v);
     this.modalGarajeAbierto.set(false);
     this.paginaActual.set(1);
+    this.navContext.guardarEstadoCatalogo({ vehiculoId: v.id });
     this.cargarRepuestos();
   }
 
@@ -209,11 +240,14 @@ export class CompradorComponent implements OnInit {
     this.marcaTemp.set(null);
     this.modeloTemp.set(null);
     this.paginaActual.set(1);
+    this.navContext.guardarEstadoCatalogo({ vehiculoId: null });
     this.cargarRepuestos();
   }
 
   toggleMoneda() {
-    this.moneda.set(this.moneda() === 'BOB' ? 'USD' : 'BOB');
+    const nueva = this.moneda() === 'BOB' ? 'USD' : 'BOB';
+    this.moneda.set(nueva);
+    this.navContext.guardarEstadoCatalogo({ moneda: nueva });
   }
 
   formatearPrecio(bob: number, usd: number): string {
@@ -221,11 +255,13 @@ export class CompradorComponent implements OnInit {
   }
 
   verDetalleRepuesto(rep: Repuesto) {
+    this.navContext.guardarEstadoCatalogo({});
     this.router.navigate(['/comprador/repuesto', rep.id]);
   }
 
   irAPagarDirecto(rep: Repuesto, event: Event) {
     event.stopPropagation();
+    this.navContext.guardarEstadoCatalogo({});
     this.router.navigate(['/comprador/checkout', rep.id]);
   }
 }

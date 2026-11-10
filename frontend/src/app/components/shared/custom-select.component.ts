@@ -38,12 +38,9 @@ export interface SelectOption {
             <button
               type="button"
               (click)="seleccionar(opcion)"
-              [class.bg-[#0071E3]]="valorSeleccionado === opcion.valor"
-              [class.text-white]="valorSeleccionado === opcion.valor"
-              [class.text-neutral-800]="valorSeleccionado !== opcion.valor"
-              [class.dark:text-neutral-200]="valorSeleccionado !== opcion.valor"
-              [class.hover:bg-black/[0.05]]="valorSeleccionado !== opcion.valor"
-              [class.dark:hover:bg-white/[0.08]]="valorSeleccionado !== opcion.valor"
+              [ngClass]="valorSeleccionado === opcion.valor
+                ? 'bg-[#0071E3] text-white'
+                : 'text-neutral-800 dark:text-neutral-100 hover:bg-black/[0.05] dark:hover:bg-white/[0.08]'"
               class="w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between transition-colors">
               <span>{{ opcion.etiqueta }}</span>
               @if (valorSeleccionado === opcion.valor) {

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
@@ -9,6 +9,7 @@ import {
   PedidosService,
   MensajesService,
   ToastService,
+  NavigationContextService,
 } from '../../services';
 import { Tienda, Repuesto, Pedido, Mensaje, ServicioTaller } from '../../models';
 import { IconComponent } from '../../ui';
@@ -21,6 +22,8 @@ import { IconComponent } from '../../ui';
 })
 export class VendedorComponent implements OnInit {
   protected readonly auth = inject(AuthService);
+  protected readonly navContext = inject(NavigationContextService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly tiendasService = inject(TiendasService);
   private readonly repuestosService = inject(RepuestosService);
@@ -105,7 +108,13 @@ export class VendedorComponent implements OnInit {
   // Identificación del Taller para clientes y beneficios (QR & Referral)
   mostrarModalQrTaller = signal(false);
   codigoReferenciaTaller = computed(() => 'TALLER-' + (this.tienda()?.nit || this.tienda()?.id?.slice(0, 6) || 'SCZ').toUpperCase());
-  enlaceReferenciaTaller = computed(() => 'http://localhost:4200/comprador/catalogo?taller_ref=' + (this.tienda()?.id || ''));
+  enlaceReferenciaTaller = computed(() => {
+    const origin =
+      typeof window !== 'undefined' && window.location.origin.startsWith('http')
+        ? window.location.origin
+        : 'https://tuautobo.onrender.com';
+    return `${origin}/comprador/catalogo?taller_ref=${this.tienda()?.id || ''}`;
+  });
 
   copiarEnlaceTaller() {
     if (navigator.clipboard) {
@@ -153,6 +162,19 @@ export class VendedorComponent implements OnInit {
 
   ngOnInit() {
     this.cargarDatosTienda();
+
+    const unregisterModalVendedor = this.navContext.registrarCerradorModal(() => {
+      if (this.mostrarModalQrTaller()) {
+        this.mostrarModalQrTaller.set(false);
+        return true;
+      }
+      if (this.mostrarModalServicio()) {
+        this.mostrarModalServicio.set(false);
+        return true;
+      }
+      return false;
+    });
+    this.destroyRef.onDestroy(() => unregisterModalVendedor());
 
     // Sincronización de ruta activa /vendedor/:tab y refresco en demanda
     this.route.paramMap.subscribe((params) => {

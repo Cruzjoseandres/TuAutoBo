@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import {
   AuthService,
   TiendasService,
@@ -11,6 +11,7 @@ import {
   VehiculosService,
   TipoCambioService,
   ToastService,
+  NavigationContextService,
 } from '../../../services';
 import { Tienda, Categoria, Fabricante, Vehiculo } from '../../../models';
 import { formatearErrorHttp } from '../../../utils/error-formatter';
@@ -27,7 +28,6 @@ import {
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     SelectComponent,
     ButtonComponent,
     IconComponent,
@@ -36,6 +36,8 @@ import {
 })
 export class CrearRepuestoComponent implements OnInit {
   protected readonly auth = inject(AuthService);
+  protected readonly navContext = inject(NavigationContextService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly tiendasService = inject(TiendasService);
@@ -304,6 +306,15 @@ export class CrearRepuestoComponent implements OnInit {
   });
 
   ngOnInit() {
+    const unregisterModalCrop = this.navContext.registrarCerradorModal(() => {
+      if (this.mostrarModalRecorte()) {
+        this.mostrarModalRecorte.set(false);
+        return true;
+      }
+      return false;
+    });
+    this.destroyRef.onDestroy(() => unregisterModalCrop());
+
     this.tipoCambioService.obtenerRegistro().subscribe((tc) => {
       if (tc?.tasa_cambio) this.tasaDolar.set(tc.tasa_cambio);
     });
@@ -609,6 +620,10 @@ export class CrearRepuestoComponent implements OnInit {
     return valido;
   }
 
+  volver() {
+    this.navContext.volver(['/vendedor', 'inventario']);
+  }
+
   publicarRepuesto() {
     const t = this.tienda();
     if (!t) {
@@ -662,7 +677,7 @@ export class CrearRepuestoComponent implements OnInit {
           next: () => {
             this.guardando.set(false);
             this.toast.exito('¡Repuesto actualizado exitosamente!');
-            this.router.navigate(['/vendedor']);
+            this.volver();
           },
           error: (err) => {
             this.guardando.set(false);
@@ -682,7 +697,7 @@ export class CrearRepuestoComponent implements OnInit {
         next: () => {
           this.guardando.set(false);
           this.toast.exito('¡Repuesto publicado exitosamente en el catálogo de TuAuto!');
-          this.router.navigate(['/vendedor']);
+          this.volver();
         },
         error: (err) => {
           this.guardando.set(false);

@@ -476,14 +476,7 @@
                     <button
                       type="button"
                       (click)="tipoEstablecimiento.set('TIENDA_REPUESTOS')"
-                      [class.bg-neutral-900]="tipoEstablecimiento() === 'TIENDA_REPUESTOS'"
-                      [class.dark:bg-white]="tipoEstablecimiento() === 'TIENDA_REPUESTOS'"
-                      [class.text-white]="tipoEstablecimiento() === 'TIENDA_REPUESTOS'"
-                      [class.dark:text-neutral-900]="tipoEstablecimiento() === 'TIENDA_REPUESTOS'"
-                      [class.bg-black/[0.03]]="tipoEstablecimiento() !== 'TIENDA_REPUESTOS'"
-                      [class.dark:bg-white/[0.06]]="tipoEstablecimiento() !== 'TIENDA_REPUESTOS'"
-                      [class.text-neutral-700]="tipoEstablecimiento() !== 'TIENDA_REPUESTOS'"
-                      [class.dark:text-neutral-300]="tipoEstablecimiento() !== 'TIENDA_REPUESTOS'"
+                      [ngClass]="tipoEstablecimiento() === 'TIENDA_REPUESTOS' ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900' : 'bg-black/[0.03] dark:bg-white/[0.06] text-neutral-700 dark:text-neutral-300'"
                       class="p-2.5 rounded-xl text-center text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] transition-all flex flex-col items-center justify-center space-y-1">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.651V9.35m0 0a3.001 3.001 0 003.75-.614A2.996 2.996 0 009.75 9.35c.82 0 1.58-.33 2.14-.863a3.002 3.002 0 004.22 0c.56.533 1.32.863 2.14.863a2.996 2.996 0 002.36-.614 3.001 3.001 0 003.75.614M3.75 9.35V4.875c0-.621.504-1.125 1.125-1.125h14.25c.621 0 1.125.504 1.125 1.125v4.474" />
@@ -494,14 +487,7 @@
                     <button
                       type="button"
                       (click)="tipoEstablecimiento.set('TALLER_MECANICO')"
-                      [class.bg-neutral-900]="tipoEstablecimiento() === 'TALLER_MECANICO'"
-                      [class.dark:bg-white]="tipoEstablecimiento() === 'TALLER_MECANICO'"
-                      [class.text-white]="tipoEstablecimiento() === 'TALLER_MECANICO'"
-                      [class.dark:text-neutral-900]="tipoEstablecimiento() === 'TALLER_MECANICO'"
-                      [class.bg-black/[0.03]]="tipoEstablecimiento() !== 'TALLER_MECANICO'"
-                      [class.dark:bg-white/[0.06]]="tipoEstablecimiento() !== 'TALLER_MECANICO'"
-                      [class.text-neutral-700]="tipoEstablecimiento() !== 'TALLER_MECANICO'"
-                      [class.dark:text-neutral-300]="tipoEstablecimiento() !== 'TALLER_MECANICO'"
+                      [ngClass]="tipoEstablecimiento() === 'TALLER_MECANICO' ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900' : 'bg-black/[0.03] dark:bg-white/[0.06] text-neutral-700 dark:text-neutral-300'"
                       class="p-2.5 rounded-xl text-center text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] transition-all flex flex-col items-center justify-center space-y-1">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.07a4.5 4.5 0 004.486-6.32l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.32 4.486c.09.444.135.903.07 1.353" />
@@ -512,14 +498,7 @@
                     <button
                       type="button"
                       (click)="tipoEstablecimiento.set('REPUESTERA_Y_TALLER')"
-                      [class.bg-neutral-900]="tipoEstablecimiento() === 'REPUESTERA_Y_TALLER'"
-                      [class.dark:bg-white]="tipoEstablecimiento() === 'REPUESTERA_Y_TALLER'"
-                      [class.text-white]="tipoEstablecimiento() === 'REPUESTERA_Y_TALLER'"
-                      [class.dark:text-neutral-900]="tipoEstablecimiento() === 'REPUESTERA_Y_TALLER'"
-                      [class.bg-black/[0.03]]="tipoEstablecimiento() !== 'REPUESTERA_Y_TALLER'"
-                      [class.dark:bg-white/[0.06]]="tipoEstablecimiento() !== 'REPUESTERA_Y_TALLER'"
-                      [class.text-neutral-700]="tipoEstablecimiento() !== 'REPUESTERA_Y_TALLER'"
-                      [class.dark:text-neutral-300]="tipoEstablecimiento() !== 'REPUESTERA_Y_TALLER'"
+                      [ngClass]="tipoEstablecimiento() === 'REPUESTERA_Y_TALLER' ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900' : 'bg-black/[0.03] dark:bg-white/[0.06] text-neutral-700 dark:text-neutral-300'"
                       class="p-2.5 rounded-xl text-center text-xs font-semibold border border-black/[0.06] dark:border-white/[0.08] transition-all flex flex-col items-center justify-center space-y-1">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />

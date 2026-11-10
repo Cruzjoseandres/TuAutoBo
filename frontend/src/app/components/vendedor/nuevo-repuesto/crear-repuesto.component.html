@@ -3,12 +3,13 @@
   <!-- Barra Superior de Navegación de Tienda -->
   <div class="flex flex-wrap items-center justify-between gap-3 apple-card rounded-2xl p-3 shadow-sm">
     <div class="flex items-center space-x-2 text-xs">
-      <a
-        routerLink="/vendedor"
+      <button
+        type="button"
+        (click)="volver()"
         class="active:scale-[0.97] transition-all inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 font-semibold">
         <app-icon name="arrow-left" size="xs"></app-icon>
         <span>Volver al Inventario</span>
-      </a>
+      </button>
       <span class="text-neutral-300 dark:text-neutral-500">/</span>
       <span class="font-bold text-neutral-900 dark:text-white">{{ modoEdicion() ? 'Editar Repuesto' : 'Publicar Nuevo Repuesto en Catálogo' }}</span>
     </div>
@@ -455,11 +456,12 @@
         </div>
 
         <div class="pt-4 flex justify-end space-x-3 border-t border-black/[0.06] dark:border-white/[0.08]">
-          <a
-            routerLink="/vendedor"
+          <button
+            type="button"
+            (click)="volver()"
             class="px-5 py-2.5 rounded-xl bg-black/[0.04] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-700 dark:text-neutral-300 font-semibold transition-colors">
             Cancelar
-          </a>
+          </button>
           <app-button
             type="submit"
             variant="primary"

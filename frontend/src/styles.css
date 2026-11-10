@@ -4,72 +4,107 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+    -webkit-text-size-adjust: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
     scroll-behavior: smooth;
     scrollbar-gutter: stable;
-    overflow-y: scroll;
+    overscroll-behavior-y: none;
   }
 
   body {
     background-color: #F5F5F7;
     color: #1D1D1F;
-    min-height: 100vh;
-    padding-bottom: env(safe-area-inset-bottom, 20px);
+    min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     overflow-x: hidden;
-    transition: background-color 0.25s ease, color 0.25s ease;
+    overscroll-behavior-y: none;
   }
 
   html.dark body {
     background-color: #000000;
     color: #F5F5F7;
   }
+
+  /* Fluidez Táctil Nativa (Cero delay de 300ms y sin selección accidental de texto en controles) */
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  input,
+  textarea,
+  select {
+    touch-action: manipulation;
+  }
+
+  /* Evitar auto-zoom en pantallas táctiles móviles al enfocar inputs */
+  @media (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* ==============================================================================
    REGLAS GLOBALES DE CONTRASTE Y LEGIBILIDAD EN MODO OSCURO (APPLE DESIGN)
    ============================================================================== */
-html.dark h1,
-html.dark h2,
-html.dark h3,
-html.dark h4,
-html.dark h5,
-html.dark h6 {
+html.dark h1:not([class*="dark:text-neutral-900"]),
+html.dark h2:not([class*="dark:text-neutral-900"]),
+html.dark h3:not([class*="dark:text-neutral-900"]),
+html.dark h4:not([class*="dark:text-neutral-900"]),
+html.dark h5:not([class*="dark:text-neutral-900"]),
+html.dark h6:not([class*="dark:text-neutral-900"]) {
   color: #FFFFFF;
 }
 
-/* Textos oscuros pasan a blanco o gris claro en modo oscuro */
-html.dark .text-neutral-900:not(.bg-white):not([class*="bg-white"]) {
+/* Textos oscuros sin variante explícita pasan a blanco o gris claro legible en modo oscuro */
+html.dark .text-neutral-900:not([class*="dark:text-neutral-900"]):not(.bg-white:not([class*="dark:bg-"])) {
   color: #FFFFFF;
 }
 
-html.dark .text-neutral-800:not(.bg-white):not([class*="bg-white"]) {
+html.dark .text-neutral-800:not([class*="dark:text-neutral-900"]):not(.bg-white:not([class*="dark:bg-"])) {
   color: #F5F5F7;
 }
 
-html.dark .text-neutral-700:not(.bg-white):not([class*="bg-white"]) {
+html.dark .text-neutral-700:not([class*="dark:text-neutral-900"]):not(.bg-white:not([class*="dark:bg-"])) {
   color: #E5E5EA;
 }
 
-html.dark .text-neutral-600:not(.bg-white):not([class*="bg-white"]) {
+html.dark .text-neutral-600:not([class*="dark:text-neutral-900"]):not(.bg-white:not([class*="dark:bg-"])) {
   color: #D1D1D6;
 }
 
-html.dark .text-neutral-500:not(.bg-white):not([class*="bg-white"]) {
-  color: #A1A1A6;
+html.dark .text-neutral-500:not([class*="dark:text-neutral-900"]):not(.bg-white:not([class*="dark:bg-"])) {
+  color: #AEAEB2;
 }
 
-html.dark .text-neutral-400:not(.bg-white):not([class*="bg-white"]) {
+html.dark .text-neutral-400:not([class*="dark:text-neutral-900"]):not(.bg-white:not([class*="dark:bg-"])) {
   color: #C7C7CC;
 }
 
-/* Excepciones de navegación: pestañas activas o botones con fondo blanco preservan texto oscuro */
-html.dark .bg-white.text-neutral-900,
-html.dark .bg-white .text-neutral-900,
-html.dark .bg-white.text-neutral-800,
-html.dark .bg-white .text-neutral-800 {
+/* Botones o píldoras que en modo oscuro tienen fondo blanco explícito preservan texto oscuro */
+html.dark .dark\:bg-white.dark\:text-neutral-900,
+html.dark .bg-white:not([class*="dark:bg-"]).text-neutral-900,
+html.dark .bg-white:not([class*="dark:bg-"]).text-neutral-800 {
   color: #171717 !important;
 }
 
@@ -88,15 +123,10 @@ html.dark .border-neutral-200:not([class*="dark:border-"]) {
 }
 
 /* Entradas de formulario globales en modo oscuro (Protección Total de Contraste) */
-html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([class*="dark:text-"]),
-html.dark textarea:not([class*="dark:text-"]),
-html.dark select:not([class*="dark:text-"]) {
-  color: #FFFFFF !important;
-}
-
-html.dark input,
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
 html.dark textarea,
 html.dark select {
+  color: #FFFFFF !important;
   color-scheme: dark;
 }
 
@@ -105,31 +135,43 @@ html.dark textarea::placeholder {
   color: #8E8E93 !important;
 }
 
-/* Apple Glassmorphism Adaptable a Modo Claro y Oscuro */
+/* Apple Glassmorphism Optimizado para Fluidez Móvil (GPU-friendly) */
 .apple-card {
-  background-color: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 160ms var(--ease-out-strong), opacity 160ms ease-out, border-color 160ms ease;
 }
 
 html.dark .apple-card {
-  background-color: rgba(28, 28, 30, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  background-color: rgba(28, 28, 30, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* En móviles táctiles reducimos el radio de blur para mantener 60/120fps constantes al hacer scroll */
+@media (pointer: coarse) {
+  .apple-card {
+    background-color: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  html.dark .apple-card {
+    background-color: rgba(28, 28, 30, 0.96);
+  }
 }
 
 .apple-header {
-  background-color: rgba(245, 245, 247, 0.82);
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  background-color: rgba(245, 245, 247, 0.86);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 html.dark .apple-header {
-  background-color: rgba(0, 0, 0, 0.82);
+  background-color: rgba(12, 12, 14, 0.88);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -137,13 +179,13 @@ html.dark .apple-header {
   background-color: rgba(0, 0, 0, 0.03);
   border: 1px solid rgba(0, 0, 0, 0.1);
   color: #1D1D1F;
-  transition: all 0.15s ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
 }
 
 html.dark .apple-input {
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #F5F5F7;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
 }
 
 .apple-input:focus {
@@ -154,8 +196,20 @@ html.dark .apple-input {
 
 html.dark .apple-input:focus {
   background-color: #1C1C1E;
-  border-color: #0071E3;
-  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.35);
+  border-color: #38BDF8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.28);
+}
+
+/* Reducir movimiento si el sistema operativo del usuario lo solicita */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Ocultar barra de desplazamiento en carruseles táctiles */

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { Usuario, RespuestaAuth } from '../models';
 import { environment } from '../../environments/environment';
+import { LocalDbService } from './local-db.service';
 
 @Injectable({
   providedIn: 'root',
@@ -11,6 +12,7 @@ import { environment } from '../../environments/environment';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly localDb = inject(LocalDbService);
   private readonly apiUrl = `${environment.apiUrl}/usuarios`;
 
   // Signals reactivos para el estado del usuario
@@ -18,7 +20,7 @@ export class AuthService {
   readonly token = signal<string | null>(null);
 
   // Computados
-  readonly estaAutenticado = computed(() => !!this.usuarioActual());
+  readonly estaAutenticado = computed(() => !!this.usuarioActual() && !!this.token());
   readonly rolPrincipal = computed(() => {
     const user = this.usuarioActual();
     if (!user || !user.roles || user.roles.length === 0) return null;
@@ -27,19 +29,28 @@ export class AuthService {
   });
 
   constructor() {
-    this.cargarSesionAlmacenada();
+    this.cargarSesionSincronaInicial();
   }
 
-  private cargarSesionAlmacenada() {
-    const tokenGuardado = localStorage.getItem('tuauto_token');
-    const usuarioGuardado = localStorage.getItem('tuauto_usuario');
-    if (tokenGuardado && usuarioGuardado) {
-      try {
+  private cargarSesionSincronaInicial() {
+    try {
+      const tokenGuardado = localStorage.getItem('tuauto_token');
+      const usuarioGuardado = localStorage.getItem('tuauto_usuario');
+      if (tokenGuardado && usuarioGuardado) {
+        const parsed = JSON.parse(usuarioGuardado) as Usuario;
         this.token.set(tokenGuardado);
-        this.usuarioActual.set(JSON.parse(usuarioGuardado));
-      } catch (e) {
-        this.logout();
+        this.usuarioActual.set(parsed);
       }
+    } catch {
+      // Ignorar; se restaurará desde IndexedDB en inicializarSesionDesdeBD
+    }
+  }
+
+  async inicializarSesionDesdeBD(): Promise<void> {
+    const sesion = await this.localDb.obtenerSesion();
+    if (sesion && sesion.token && sesion.usuario) {
+      this.token.set(sesion.token);
+      this.usuarioActual.set(sesion.usuario);
     }
   }
 
@@ -59,12 +70,11 @@ export class AuthService {
           };
           this.usuarioActual.set(usuario);
 
-          // Persistir sesión de manera segura
-          localStorage.setItem('tuauto_token', res.token);
-          localStorage.setItem('tuauto_usuario', JSON.stringify(usuario));
+          // Persistir sesión en Base de Datos Local IndexedDB + localStorage
+          void this.localDb.guardarSesion(res.token, usuario);
 
-          // Redirigir a la vista de su rol
-          this.redirigirSegunRol();
+          // Redirigir a la pestaña principal de su rol reemplazando /login en el historial
+          this.redirigirSegunRol(true);
         }),
       );
   }
@@ -97,9 +107,8 @@ export class AuthService {
               token: res.token,
             };
             this.usuarioActual.set(usuario);
-            localStorage.setItem('tuauto_token', res.token);
-            localStorage.setItem('tuauto_usuario', JSON.stringify(usuario));
-            this.redirigirSegunRol();
+            void this.localDb.guardarSesion(res.token, usuario);
+            this.redirigirSegunRol(true);
           }
         }),
       );
@@ -116,9 +125,8 @@ export class AuthService {
   logout() {
     this.token.set(null);
     this.usuarioActual.set(null);
-    localStorage.removeItem('tuauto_token');
-    localStorage.removeItem('tuauto_usuario');
-    this.router.navigate(['/login']);
+    void this.localDb.limpiarSesion();
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   tieneRol(rolRequerido: string): boolean {
@@ -126,24 +134,24 @@ export class AuthService {
     return rol === rolRequerido;
   }
 
-  redirigirSegunRol() {
+  obtenerRutaPrincipalPorRol(): string[] {
     const rol = this.rolPrincipal();
     switch (rol) {
       case 'COMPRADOR':
-        this.router.navigate(['/comprador']);
-        break;
+        return ['/comprador', 'catalogo'];
       case 'VENDEDOR':
-        this.router.navigate(['/vendedor']);
-        break;
+        return ['/vendedor', 'inventario'];
       case 'REPARTIDOR':
-        this.router.navigate(['/repartidor']);
-        break;
+        return ['/repartidor', 'disponibles'];
       case 'ADMINISTRADOR':
-        this.router.navigate(['/admin']);
-        break;
+        return ['/admin', 'resumen'];
       default:
-        this.router.navigate(['/login']);
-        break;
+        return ['/login'];
     }
+  }
+
+  redirigirSegunRol(reemplazarHistorial = true) {
+    const ruta = this.obtenerRutaPrincipalPorRol();
+    this.router.navigate(ruta, { replaceUrl: reemplazarHistorial });
   }
 }

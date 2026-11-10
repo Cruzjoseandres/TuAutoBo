@@ -11,6 +11,7 @@ import { AdminComponent } from './components/admin/admin.component';
 import { DescargarAppComponent } from './components/descargar-app/descargar-app.component';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
+import { guestGuard } from './guards/guest.guard';
 
 export const routes: Routes = [
   {
@@ -21,10 +22,12 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
+    canActivate: [guestGuard],
   },
   {
     path: 'register',
     component: RegisterComponent,
+    canActivate: [guestGuard],
   },
   {
     path: 'comprador',
