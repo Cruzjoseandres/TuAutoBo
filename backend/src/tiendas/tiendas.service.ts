@@ -5,6 +5,7 @@ import { Tienda } from './entities/tienda.entity';
 import { CrearTiendaDto } from './dto/crear-tienda.dto';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { PlanTiendaEnum, RolEnum, TipoEstablecimientoEnum } from '../common/enums';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class TiendasService {
@@ -12,6 +13,7 @@ export class TiendasService {
     @InjectRepository(Tienda)
     private readonly tiendaRepository: Repository<Tienda>,
     private readonly usuariosService: UsuariosService,
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   async findAll(): Promise<Tienda[]> {
@@ -91,21 +93,42 @@ export class TiendasService {
       usuario_id: usuario.id,
     });
 
-    return this.tiendaRepository.save(nuevaTienda);
+    const guardada = await this.tiendaRepository.save(nuevaTienda);
+    const completa = await this.findById(guardada.id);
+    this.realtimeGateway.emitirSolicitudAfiliacion({
+      tipo: 'TIENDA',
+      id: completa.id,
+      nombre: completa.nombre,
+      detalle: `NIT: ${completa.nit} • ${completa.direccion_escrita}`,
+      creado_en: completa.creado_en,
+    });
+    return completa;
   }
 
   async aprobarTienda(id: string): Promise<Tienda> {
     const tienda = await this.findById(id);
     tienda.esta_verificada = true;
     await this.usuariosService.cambiarEstadoCuenta(tienda.usuario_id, 'ACTIVO');
-    return this.tiendaRepository.save(tienda);
+    const guardada = await this.tiendaRepository.save(tienda);
+    this.realtimeGateway.emitirSolicitudActualizada({
+      tipo: 'TIENDA',
+      id: guardada.id,
+      estado: 'APROBADA',
+    });
+    return guardada;
   }
 
   async rechazarTienda(id: string): Promise<Tienda> {
     const tienda = await this.findById(id);
     tienda.esta_verificada = false;
     await this.usuariosService.cambiarEstadoCuenta(tienda.usuario_id, 'RECHAZADO');
-    return this.tiendaRepository.save(tienda);
+    const guardada = await this.tiendaRepository.save(tienda);
+    this.realtimeGateway.emitirSolicitudActualizada({
+      tipo: 'TIENDA',
+      id: guardada.id,
+      estado: 'RECHAZADA',
+    });
+    return guardada;
   }
 
   async actualizarPlan(id: string, nuevoPlan: PlanTiendaEnum): Promise<Tienda> {

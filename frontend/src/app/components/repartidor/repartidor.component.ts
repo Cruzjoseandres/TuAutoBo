@@ -2,12 +2,14 @@ import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angula
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AuthService,
   RepartidoresService,
   PedidosService,
   ToastService,
   NavigationContextService,
+  SocketService,
 } from '../../services';
 import { Repartidor, Pedido } from '../../models';
 import { CustomSelectComponent, SelectOption } from '../shared/custom-select.component';
@@ -28,6 +30,7 @@ export class RepartidorComponent implements OnInit {
   private readonly repartidoresService = inject(RepartidoresService);
   private readonly pedidosService = inject(PedidosService);
   private readonly toast = inject(ToastService);
+  private readonly socketService = inject(SocketService);
 
   cargando = signal<boolean>(false);
   tabActiva = signal<TabRepartidor>('disponibles');
@@ -70,7 +73,7 @@ export class RepartidorComponent implements OnInit {
     this.destroyRef.onDestroy(() => unregisterModalCapacidad());
 
     // Sincronización de ruta activa /repartidor/:tab y refresco en demanda
-    this.route.paramMap.subscribe((params) => {
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const tab = params.get('tab') as TabRepartidor;
       if (tab && ['disponibles', 'en-curso', 'historial'].includes(tab)) {
         this.tabActiva.set(tab);
@@ -80,6 +83,32 @@ export class RepartidorComponent implements OnInit {
         }
       }
     });
+
+    // Suscripción Socket.IO en vivo para nuevas carreras y actualizaciones de despacho
+    this.socketService.pedidoActualizado$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((evento) => {
+        const rep = this.perfil();
+        if (!rep) return;
+
+        this.cargarPedidosDisponibles(rep.id);
+        this.cargarPedidoEnCurso(rep.id);
+        this.cargarHistorial(rep.id);
+
+        if (
+          evento.pedido?.tipo_entrega === 'DELIVERY_MOTO' &&
+          (evento.accion === 'PAGO_CONFIRMADO' || evento.accion === 'LISTO_DESPACHO')
+        ) {
+          this.toast.exito(
+            `🛵 Nuevo Despacho Disponible (${evento.pedido.numero_orden})`,
+            `Recoger en ${evento.pedido.tienda?.nombre || 'Tienda'} • Flete Bs ${Number(evento.pedido.tarifa_envio_bs || 0).toFixed(2)}`,
+            {
+              rutaDestino: ['/repartidor', 'disponibles'],
+              textoAccion: 'Ver Despacho',
+            },
+          );
+        }
+      });
   }
 
   refrescarPorTab(tab: TabRepartidor, repartidorId: string) {
@@ -123,9 +152,10 @@ export class RepartidorComponent implements OnInit {
         this.capacidadMax.set(rep.capacidad_peso_max_kg);
         this.tamanoMaximo.set(rep.tamano_maximo);
 
-        // Cargar datos de la tab actual y verificar si tiene carrera en curso
-        this.refrescarPorTab(this.tabActiva(), rep.id);
+        // Cargar todos los contadores inicialmente
+        this.cargarPedidosDisponibles(rep.id);
         this.cargarPedidoEnCurso(rep.id);
+        this.cargarHistorial(rep.id);
       }
     });
   }

@@ -47,8 +47,13 @@
         <a 
           [routerLink]="['/vendedor', 'mensajes']"
           [ngClass]="tabActiva() === 'mensajes' ? 'bg-white dark:bg-[#2C2C2E] text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400'"
-          class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">
-          Consultas Técnicas ({{ mensajesEntrantes().length }})
+          class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 whitespace-nowrap">
+          <span>Chats & Consultas ({{ conversacionesTienda().length }})</span>
+          @if (consultasPendientesCount() > 0) {
+            <span class="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold animate-pulse">
+              {{ consultasPendientesCount() }}
+            </span>
+          }
         </a>
 
         <a 
@@ -474,29 +479,158 @@
     </div>
   }
 
-  <!-- PESTAÑA 3: CHAT PRE-COMPRA -->
+  <!-- PESTAÑA 3: BANDEJA DE CHATS Y CONSULTAS TÉCNICAS (AGRUPADO POR COMPRADOR + REPUESTO EN VIVO) -->
   @if (tabActiva() === 'mensajes') {
     <div class="space-y-4">
-      <h2 class="text-base font-bold text-neutral-900 dark:text-white">Consultas Técnicas de Compradores</h2>
-
-      <div class="space-y-3">
-        @for (msg of mensajesEntrantes(); track msg.id) {
-          <div class="bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl rounded-3xl p-5 border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-2">
-            <div class="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400">
-              <span>Cliente: <strong class="text-neutral-900 dark:text-white">{{ msg.remitente_nombre }}</strong></span>
-              <span class="text-[11px] font-mono">{{ msg.creado_en | date:'short' }}</span>
-            </div>
-            <p class="text-xs text-neutral-800 dark:text-neutral-200 bg-neutral-50 dark:bg-white/[0.04] p-3 rounded-2xl border border-neutral-100 dark:border-white/[0.08]">{{ msg.texto }}</p>
-            <div class="text-right">
-              <button 
-                (click)="responderCompatibilidad(msg)"
-                class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm">
-                Confirmar Compatibilidad 100%
-              </button>
-            </div>
-          </div>
-        }
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-base font-bold text-neutral-900 dark:text-white">Bandeja de Chats con Compradores</h2>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">Hilos agrupados por comprador y repuesto consultado en tiempo real.</p>
+        </div>
+        <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold border border-emerald-500/20">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Socket en Vivo Activo</span>
+        </div>
       </div>
+
+      @if (conversacionesTienda().length === 0) {
+        <div class="apple-card rounded-3xl p-10 text-center space-y-2">
+          <p class="text-sm font-bold text-neutral-900 dark:text-white">Sin conversaciones activas</p>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">Cuando un comprador consulte por un repuesto de tu tienda, el chat aparecerá aquí en tiempo real.</p>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          
+          <!-- Columna Izquierda: Lista de Hilos (Comprador + Repuesto) -->
+          <div class="lg:col-span-4 apple-card rounded-3xl p-3 space-y-2 max-h-[600px] overflow-y-auto no-scrollbar">
+            <div class="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+              Chats Activos ({{ conversacionesTienda().length }})
+            </div>
+            @for (conv of conversacionesTienda(); track conv.key) {
+              <button
+                type="button"
+                (click)="seleccionarConversacionTienda(conv)"
+                [ngClass]="conversacionSeleccionadaTienda()?.key === conv.key
+                  ? 'bg-[#0071E3]/10 dark:bg-[#0071E3]/20 border-[#0071E3]/40 ring-1 ring-[#0071E3]'
+                  : 'bg-neutral-50 dark:bg-white/[0.03] border-black/[0.04] dark:border-white/[0.06] hover:bg-neutral-100 dark:hover:bg-white/[0.06]'"
+                class="w-full p-3 rounded-2xl border text-left transition-all flex items-start space-x-3">
+                @if (conv.repuestoImagen) {
+                  <img
+                    [src]="conv.repuestoImagen"
+                    class="w-11 h-11 rounded-xl object-cover bg-neutral-200 dark:bg-neutral-800 flex-shrink-0"
+                  />
+                } @else {
+                  <div class="w-11 h-11 rounded-xl bg-blue-500/10 text-[#0071E3] flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                    💬
+                  </div>
+                }
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="text-xs font-bold text-neutral-900 dark:text-white truncate">{{ conv.compradorNombre }}</span>
+                    @if (conv.pendienteRespuesta) {
+                      <span class="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-bold flex-shrink-0">Nuevo</span>
+                    } @else {
+                      <span class="text-[10px] text-neutral-400 flex-shrink-0">{{ conv.mensajes.length }} msg</span>
+                    }
+                  </div>
+                  <div class="text-[11px] font-semibold text-[#0071E3] truncate">
+                    {{ conv.repuestoTitulo }}
+                  </div>
+                  <p class="text-[11px] text-neutral-500 dark:text-neutral-400 truncate mt-0.5">
+                    {{ conv.ultimoMensaje }}
+                  </p>
+                </div>
+              </button>
+            }
+          </div>
+
+          <!-- Columna Derecha: Conversación Activa -->
+          <div class="lg:col-span-8 apple-card rounded-3xl p-5 flex flex-col h-[540px]">
+            @if (conversacionSeleccionadaTienda(); as activa) {
+              <!-- Cabecera del Hilo -->
+              <div class="flex flex-wrap items-center justify-between gap-3 pb-3.5 border-b border-black/[0.06] dark:border-white/[0.08]">
+                <div class="flex items-center space-x-3 min-w-0">
+                  @if (activa.repuestoImagen) {
+                    <img [src]="activa.repuestoImagen" class="w-12 h-12 rounded-xl object-cover bg-neutral-100 dark:bg-neutral-800 flex-shrink-0" />
+                  }
+                  <div class="min-w-0">
+                    <div class="flex items-center space-x-2">
+                      <span class="text-sm font-bold text-neutral-900 dark:text-white truncate">Cliente: {{ activa.compradorNombre }}</span>
+                      @if (activa.pendienteRespuesta) {
+                        <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">Esperando respuesta</span>
+                      }
+                    </div>
+                    <p class="text-xs font-semibold text-[#0071E3] truncate">Repuesto: {{ activa.repuestoTitulo }}</p>
+                    @if (activa.repuestoOem) {
+                      <span class="text-[10px] font-mono text-neutral-400">OEM/SKU: {{ activa.repuestoOem }}</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Botón Rápido Confirmar Compatibilidad 100% OEM -->
+                <button
+                  type="button"
+                  (click)="confirmarCompatibilidadConversacion()"
+                  [disabled]="enviandoMensajeTienda()"
+                  class="active:scale-95 transition-all px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold shadow-sm flex items-center space-x-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  <span>Confirmar Compatibilidad 100% OEM</span>
+                </button>
+              </div>
+
+              <!-- Historial de Mensajes -->
+              <div class="flex-1 overflow-y-auto py-4 space-y-3 pr-1">
+                @for (msg of activa.mensajes; track msg.id) {
+                  <div
+                    class="flex flex-col"
+                    [class.items-end]="msg.remitente_tipo === 'TIENDA'"
+                    [class.items-start]="msg.remitente_tipo !== 'TIENDA'">
+                    <div
+                      class="p-3.5 rounded-2xl max-w-[82%] text-xs space-y-1 shadow-sm"
+                      [ngClass]="msg.remitente_tipo === 'TIENDA'
+                        ? 'bg-[#0071E3] text-white rounded-br-sm'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white border border-black/[0.06] dark:border-white/[0.08] rounded-bl-sm'">
+                      @if (msg.es_confirmacion_compatibilidad) {
+                        <div class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-white/20 text-white text-[10px] font-bold uppercase">
+                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                          <span>Certificación OEM 100% Compatible</span>
+                        </div>
+                      }
+                      <p class="leading-relaxed">{{ msg.texto }}</p>
+                    </div>
+                    <span class="text-[10px] text-neutral-400 mt-1 px-1">
+                      {{ msg.remitente_tipo === 'TIENDA' ? 'Tu Tienda' : activa.compradorNombre }} • {{ msg.creado_en | date:'shortTime' }}
+                    </span>
+                  </div>
+                }
+              </div>
+
+              <!-- Caja de Respuesta Libre -->
+              <div class="pt-3 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center gap-2">
+                <input
+                  type="text"
+                  [(ngModel)]="textoRespuestaTienda"
+                  (keyup.enter)="enviarRespuestaTextoTienda()"
+                  placeholder="Escribe una respuesta para {{ activa.compradorNombre }}..."
+                  class="flex-1 px-4 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
+                />
+                <button
+                  type="button"
+                  (click)="enviarRespuestaTextoTienda()"
+                  [disabled]="enviandoMensajeTienda() || !textoRespuestaTienda().trim()"
+                  class="active:scale-95 transition-all px-5 py-2.5 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] disabled:opacity-50 text-white text-xs font-bold shadow-sm">
+                  {{ enviandoMensajeTienda() ? 'Enviando...' : 'Responder' }}
+                </button>
+              </div>
+            }
+          </div>
+
+        </div>
+      }
     </div>
   }
 

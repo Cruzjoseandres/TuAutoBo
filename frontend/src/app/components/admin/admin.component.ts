@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AuthService,
   ParametrosService,
@@ -12,6 +13,8 @@ import {
   CategoriasService,
   MarcasService,
   FabricantesService,
+  SocketService,
+  ToastService,
 } from '../../services';
 import {
   Parametro,
@@ -52,6 +55,9 @@ export class AdminComponent implements OnInit {
   private readonly categoriasService = inject(CategoriasService);
   private readonly marcasService = inject(MarcasService);
   private readonly fabricantesService = inject(FabricantesService);
+  private readonly socketService = inject(SocketService);
+  private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   cargando = signal<boolean>(false);
 
@@ -167,13 +173,56 @@ export class AdminComponent implements OnInit {
     this.cargarDatosAdmin();
 
     // Sincronizar ruta activa de URL /admin/:tab
-    this.route.paramMap.subscribe((params) => {
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const tab = params.get('tab') as SeccionAdmin;
       if (tab && ['resumen', 'solicitudes', 'aliados', 'catalogo', 'ordenes', 'parametros'].includes(tab)) {
         this.seccionActiva.set(tab);
         this.refrescarDatosPorSeccion(tab);
       }
     });
+
+    // Socket.IO en vivo: Nuevas solicitudes de afiliación (Tiendas / Repartidores)
+    this.socketService.solicitudAfiliacion$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((payload) => {
+        this.tiendasService.findAll().subscribe((d) => this.tiendas.set(d));
+        this.repartidoresService.findAll().subscribe((d) => this.repartidores.set(d));
+        this.auth.findAllUsuarios().subscribe((d) => this.usuarios.set(d));
+
+        const etiquetaTipo = payload.tipo === 'TIENDA' ? 'Tienda / Taller' : 'Repartidor';
+        this.toast.info(
+          `🔔 Nueva Solicitud de ${etiquetaTipo}`,
+          `${payload.nombre}${payload.detalle ? ' • ' + payload.detalle : ''}`,
+          {
+            rutaDestino: ['/admin', 'solicitudes'],
+            textoAccion: 'Ir a Solicitudes',
+          },
+        );
+      });
+
+    this.socketService.solicitudActualizada$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.tiendasService.findAll().subscribe((d) => this.tiendas.set(d));
+        this.repartidoresService.findAll().subscribe((d) => this.repartidores.set(d));
+      });
+
+    // Socket.IO en vivo: Actualización de Órdenes y Disputas
+    this.socketService.pedidoActualizado$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((evento) => {
+        this.pedidosService.findAll().subscribe((peds) => this.pedidos.set(peds));
+        if (evento.accion === 'DISPUTA_ABIERTA') {
+          this.toast.advertencia(
+            `⚠️ Disputa abierta en orden ${evento.pedido.numero_orden}`,
+            evento.pedido.motivo_disputa || 'Requiere intervención de arbitraje Escrow.',
+            {
+              rutaDestino: ['/admin', 'ordenes'],
+              textoAccion: 'Revisar Disputa',
+            },
+          );
+        }
+      });
   }
 
   mostrarAviso(mensaje: string) {

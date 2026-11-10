@@ -18,3 +18,4 @@ export * from './ubicacion.service';
 export * from './version-check.service';
 export * from './local-db.service';
 export * from './navigation-context.service';
+export * from './socket.service';

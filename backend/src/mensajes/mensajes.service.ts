@@ -6,6 +6,7 @@ import { CrearMensajeDto } from './dto/crear-mensaje.dto';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { TiendasService } from '../tiendas/tiendas.service';
 import { RepuestosService } from '../repuestos/repuestos.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class MensajesService {
@@ -15,6 +16,7 @@ export class MensajesService {
     private readonly usuariosService: UsuariosService,
     private readonly tiendasService: TiendasService,
     private readonly repuestosService: RepuestosService,
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   async crearMensaje(dto: CrearMensajeDto): Promise<Mensaje> {
@@ -36,7 +38,19 @@ export class MensajesService {
       repuesto_id: dto.repuesto_id ?? null,
     });
 
-    return this.mensajeRepository.save(nuevo);
+    const guardado = await this.mensajeRepository.save(nuevo);
+
+    const completo = await this.mensajeRepository
+      .createQueryBuilder('mensaje')
+      .leftJoinAndSelect('mensaje.usuario', 'usuario')
+      .leftJoinAndSelect('mensaje.tienda', 'tienda')
+      .leftJoinAndSelect('mensaje.repuesto', 'repuesto')
+      .where('mensaje.id = :id', { id: guardado.id })
+      .getOne();
+
+    const resultado = completo || guardado;
+    this.realtimeGateway.emitirNuevoMensaje(resultado);
+    return resultado;
   }
 
   async obtenerHistorialChat(
@@ -55,7 +69,7 @@ export class MensajesService {
       });
 
     if (repuestoId) {
-      qb.andWhere('(mensaje.repuesto_id = :repuestoId OR mensaje.repuesto_id IS NULL)', {
+      qb.andWhere('mensaje.repuesto_id = :repuestoId', {
         repuestoId,
       });
     }
@@ -69,9 +83,21 @@ export class MensajesService {
     return this.mensajeRepository
       .createQueryBuilder('mensaje')
       .leftJoinAndSelect('mensaje.usuario', 'usuario')
+      .leftJoinAndSelect('mensaje.tienda', 'tienda')
       .leftJoinAndSelect('mensaje.repuesto', 'repuesto')
       .where('mensaje.tienda_id = :tiendaId', { tiendaId })
-      .orderBy('mensaje.creado_en', 'DESC')
+      .orderBy('mensaje.creado_en', 'ASC')
+      .getMany();
+  }
+
+  async obtenerConversacionesComprador(usuarioId: string): Promise<Mensaje[]> {
+    return this.mensajeRepository
+      .createQueryBuilder('mensaje')
+      .leftJoinAndSelect('mensaje.usuario', 'usuario')
+      .leftJoinAndSelect('mensaje.tienda', 'tienda')
+      .leftJoinAndSelect('mensaje.repuesto', 'repuesto')
+      .where('mensaje.usuario_id = :usuarioId', { usuarioId })
+      .orderBy('mensaje.creado_en', 'ASC')
       .getMany();
   }
 }

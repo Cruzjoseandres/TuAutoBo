@@ -20,6 +20,7 @@ import { TipoCambioService } from '../tipo-cambio/tipo-cambio.service';
 import { RepartidoresService } from '../repartidores/repartidores.service';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { LogisticaContext } from './strategies';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import {
   EstadoPedidoEnum,
   MonedaEnum,
@@ -39,6 +40,7 @@ export class PedidosService {
     private readonly repartidoresService: RepartidoresService,
     private readonly usuariosService: UsuariosService,
     private readonly logisticaContext: LogisticaContext,
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   private calcularDistanciaKm(
@@ -191,7 +193,10 @@ export class PedidosService {
       repuesto_id: repuesto.id,
     });
 
-    return this.pedidoRepository.save(nuevoPedido);
+    const guardado = await this.pedidoRepository.save(nuevoPedido);
+    const completo = await this.findById(guardado.id);
+    this.realtimeGateway.emitirPedidoActualizado(completo, 'CREADO');
+    return completo;
   }
 
   async confirmarPagoQr(id: string, dto: ConfirmarPagoDto): Promise<Pedido> {
@@ -206,7 +211,10 @@ export class PedidosService {
         ? EstadoPedidoEnum.LISTO_RETIRO
         : EstadoPedidoEnum.EN_PREPARACION;
 
-    return this.pedidoRepository.save(pedido);
+    await this.pedidoRepository.save(pedido);
+    const completo = await this.findById(id);
+    this.realtimeGateway.emitirPedidoActualizado(completo, 'PAGO_CONFIRMADO');
+    return completo;
   }
 
   async asignarRepartidor(id: string, repartidorId: string): Promise<Pedido> {
@@ -225,7 +233,10 @@ export class PedidosService {
     pedido.repartidor_id = repartidor.id;
     pedido.estado = EstadoPedidoEnum.EN_CAMINO_A_TIENDA;
 
-    return this.pedidoRepository.save(pedido);
+    await this.pedidoRepository.save(pedido);
+    const completo = await this.findById(id);
+    this.realtimeGateway.emitirPedidoActualizado(completo, 'REPARTIDOR_ASIGNADO');
+    return completo;
   }
 
   async avanzarEstadoRepartidor(
@@ -254,7 +265,10 @@ export class PedidosService {
     }
 
     pedido.estado = nuevoEstado;
-    return this.pedidoRepository.save(pedido);
+    await this.pedidoRepository.save(pedido);
+    const completo = await this.findById(id);
+    this.realtimeGateway.emitirPedidoActualizado(completo, 'ESTADO_AVANZADO');
+    return completo;
   }
 
   async marcarListoDespacho(id: string, tiendaId: string): Promise<Pedido> {
@@ -269,7 +283,10 @@ export class PedidosService {
       pedido.estado = EstadoPedidoEnum.EN_PREPARACION;
     }
 
-    return this.pedidoRepository.save(pedido);
+    await this.pedidoRepository.save(pedido);
+    const completo = await this.findById(id);
+    this.realtimeGateway.emitirPedidoActualizado(completo, 'LISTO_DESPACHO');
+    return completo;
   }
 
   async confirmarEntregaConPin(id: string, dto: ConfirmarPinDto): Promise<Pedido> {
@@ -294,14 +311,20 @@ export class PedidosService {
     await this.repuestosService.descontarStockDefinitivo(pedido.repuesto_id, 1);
 
     pedido.estado = EstadoPedidoEnum.COMPLETADO;
-    return this.pedidoRepository.save(pedido);
+    await this.pedidoRepository.save(pedido);
+    const completo = await this.findById(id);
+    this.realtimeGateway.emitirPedidoActualizado(completo, 'COMPLETADO');
+    return completo;
   }
 
   async iniciarDisputa(id: string, dto: AbrirDisputaDto): Promise<Pedido> {
     const pedido = await this.findById(id);
     pedido.estado = EstadoPedidoEnum.DISPUTA;
     pedido.motivo_disputa = dto.motivo;
-    return this.pedidoRepository.save(pedido);
+    await this.pedidoRepository.save(pedido);
+    const completo = await this.findById(id);
+    this.realtimeGateway.emitirPedidoActualizado(completo, 'DISPUTA_ABIERTA');
+    return completo;
   }
 
   async reembolsarDisputa(id: string): Promise<Pedido> {
@@ -314,7 +337,10 @@ export class PedidosService {
     await this.repuestosService.liberarStock(pedido.repuesto_id, 1);
 
     pedido.estado = EstadoPedidoEnum.REEMBOLSADO;
-    return this.pedidoRepository.save(pedido);
+    await this.pedidoRepository.save(pedido);
+    const completo = await this.findById(id);
+    this.realtimeGateway.emitirPedidoActualizado(completo, 'REEMBOLSADO');
+    return completo;
   }
 
   async obtenerDisponiblesParaRepartidor(

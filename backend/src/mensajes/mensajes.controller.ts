@@ -38,5 +38,14 @@ export class MensajesController {
   ): Promise<Mensaje[]> {
     return this.mensajesService.obtenerConversacionesTienda(tiendaId);
   }
+
+  @Get('comprador/:usuarioId')
+  @ApiOperation({ summary: 'Bandeja de conversaciones y mensajes para el comprador' })
+  @ApiResponse({ status: 200, type: [Mensaje] })
+  async obtenerConversacionesComprador(
+    @Param('usuarioId', ParseUUIDPipe) usuarioId: string,
+  ): Promise<Mensaje[]> {
+    return this.mensajesService.obtenerConversacionesComprador(usuarioId);
+  }
 }
 

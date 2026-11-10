@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angula
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AuthService,
   TiendasService,
@@ -10,9 +11,24 @@ import {
   MensajesService,
   ToastService,
   NavigationContextService,
+  SocketService,
 } from '../../services';
 import { Tienda, Repuesto, Pedido, Mensaje, ServicioTaller } from '../../models';
 import { IconComponent } from '../../ui';
+
+export interface ConversacionTiendaGrupo {
+  key: string;
+  usuarioId: string;
+  compradorNombre: string;
+  repuestoId: string | null;
+  repuestoTitulo: string;
+  repuestoImagen: string | null;
+  repuestoOem: string | null;
+  ultimoMensaje: string;
+  ultimaFecha: string;
+  pendienteRespuesta: boolean;
+  mensajes: Mensaje[];
+}
 
 @Component({
   selector: 'app-vendedor',
@@ -30,6 +46,7 @@ export class VendedorComponent implements OnInit {
   private readonly pedidosService = inject(PedidosService);
   private readonly mensajesService = inject(MensajesService);
   private readonly toast = inject(ToastService);
+  private readonly socketService = inject(SocketService);
 
   cargando = signal<boolean>(false);
   tabActiva = signal<'inventario' | 'servicios' | 'pedidos' | 'mensajes' | 'ajustes'>('inventario');
@@ -38,6 +55,71 @@ export class VendedorComponent implements OnInit {
   repuestos = signal<Repuesto[]>([]);
   pedidosRecibidos = signal<Pedido[]>([]);
   mensajesEntrantes = signal<Mensaje[]>([]);
+
+  // Bandeja de Chats Agrupada por Comprador + Repuesto
+  conversacionActivaKey = signal<string | null>(null);
+  textoRespuestaTienda = signal<string>('');
+  enviandoMensajeTienda = signal<boolean>(false);
+
+  conversacionesTienda = computed<ConversacionTiendaGrupo[]>(() => {
+    const lista = this.mensajesEntrantes();
+    const mapa = new Map<string, ConversacionTiendaGrupo>();
+
+    for (const msg of lista) {
+      const key = `${msg.usuario_id}__${msg.repuesto_id || 'general'}`;
+      const existente = mapa.get(key);
+      const nombreComprador =
+        msg.usuario?.nombre_completo ||
+        (msg.remitente_tipo === 'COMPRADOR' ? msg.remitente_nombre : '') ||
+        'Comprador TuAuto';
+
+      if (!existente) {
+        mapa.set(key, {
+          key,
+          usuarioId: msg.usuario_id,
+          compradorNombre: nombreComprador,
+          repuestoId: msg.repuesto_id || null,
+          repuestoTitulo: msg.repuesto?.titulo || 'Consulta General de Tienda',
+          repuestoImagen: msg.repuesto?.url_imagen || null,
+          repuestoOem: msg.repuesto?.numero_oem || msg.repuesto?.sku || null,
+          ultimoMensaje: msg.texto,
+          ultimaFecha: msg.creado_en || new Date().toISOString(),
+          pendienteRespuesta: msg.remitente_tipo === 'COMPRADOR',
+          mensajes: [msg],
+        });
+      } else {
+        existente.mensajes.push(msg);
+        existente.ultimoMensaje = msg.texto;
+        existente.ultimaFecha = msg.creado_en || new Date().toISOString();
+        existente.pendienteRespuesta = msg.remitente_tipo === 'COMPRADOR';
+        if (msg.usuario?.nombre_completo) {
+          existente.compradorNombre = msg.usuario.nombre_completo;
+        } else if (msg.remitente_tipo === 'COMPRADOR' && msg.remitente_nombre) {
+          existente.compradorNombre = msg.remitente_nombre;
+        }
+        if (msg.repuesto?.titulo) existente.repuestoTitulo = msg.repuesto.titulo;
+        if (msg.repuesto?.url_imagen) existente.repuestoImagen = msg.repuesto.url_imagen;
+      }
+    }
+
+    return Array.from(mapa.values()).sort(
+      (a, b) => new Date(b.ultimaFecha).getTime() - new Date(a.ultimaFecha).getTime(),
+    );
+  });
+
+  conversacionSeleccionadaTienda = computed<ConversacionTiendaGrupo | null>(() => {
+    const grupos = this.conversacionesTienda();
+    const key = this.conversacionActivaKey();
+    if (key) {
+      const encontrada = grupos.find((g) => g.key === key);
+      if (encontrada) return encontrada;
+    }
+    return grupos.length > 0 ? grupos[0] : null;
+  });
+
+  consultasPendientesCount = computed(
+    () => this.conversacionesTienda().filter((c) => c.pendienteRespuesta).length,
+  );
 
   // Control de entrega en mostrador (Retiro en Tienda)
   pinRetiroTienda = signal<Record<string, string>>({});
@@ -177,7 +259,7 @@ export class VendedorComponent implements OnInit {
     this.destroyRef.onDestroy(() => unregisterModalVendedor());
 
     // Sincronización de ruta activa /vendedor/:tab y refresco en demanda
-    this.route.paramMap.subscribe((params) => {
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const tab = params.get('tab') as any;
       if (tab && ['inventario', 'servicios', 'pedidos', 'mensajes', 'ajustes'].includes(tab)) {
         this.tabActiva.set(tab);
@@ -186,6 +268,71 @@ export class VendedorComponent implements OnInit {
         }
       }
     });
+
+    // Suscripción Socket.IO en tiempo real para Mensajes y Pedidos de la Tienda
+    this.socketService.nuevoMensaje$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((msg) => {
+        const t = this.tienda();
+        if (!t || msg.tienda_id !== t.id) return;
+
+        this.mensajesEntrantes.update((actuales) => {
+          if (actuales.some((m) => m.id === msg.id)) return actuales;
+          return [...actuales, msg];
+        });
+
+        const key = `${msg.usuario_id}__${msg.repuesto_id || 'general'}`;
+        if (!this.conversacionActivaKey()) {
+          this.conversacionActivaKey.set(key);
+        }
+
+        if (msg.remitente_tipo === 'COMPRADOR') {
+          if (this.tabActiva() !== 'mensajes') {
+            this.toast.info(
+              `💬 Nueva consulta de ${msg.remitente_nombre}`,
+              msg.texto,
+              {
+                rutaDestino: ['/vendedor', 'mensajes'],
+                textoAccion: 'Responder Chat',
+              },
+            );
+          } else {
+            this.conversacionActivaKey.set(key);
+          }
+        }
+      });
+
+    this.socketService.pedidoActualizado$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((evento) => {
+        const t = this.tienda();
+        if (!t || evento.pedido?.tienda_id !== t.id) return;
+
+        this.cargarPedidosTienda(t.id);
+        this.cargarInventario(t.id);
+
+        if (evento.accion === 'PAGO_CONFIRMADO' || evento.accion === 'CREADO') {
+          this.toast.exito(
+            `🛒 Nueva Orden ${evento.pedido.numero_orden}`,
+            `${evento.pedido.repuesto?.titulo || 'Repuesto'} • Liquidación Bs ${Number(evento.pedido.liquidacion_tienda_bs || 0).toFixed(2)}`,
+            {
+              rutaDestino: ['/vendedor', 'pedidos'],
+              textoAccion: 'Ver Orden',
+            },
+          );
+        } else if (evento.accion === 'REPARTIDOR_ASIGNADO' || evento.accion === 'ESTADO_AVANZADO') {
+          if (this.tabActiva() !== 'pedidos') {
+            this.toast.info(
+              `🛵 Orden ${evento.pedido.numero_orden} en movimiento`,
+              `Nuevo estado: ${evento.pedido.estado.replace(/_/g, ' ')}`,
+              {
+                rutaDestino: ['/vendedor', 'pedidos'],
+                textoAccion: 'Ver Estado',
+              },
+            );
+          }
+        }
+      });
   }
 
   refrescarPorTab(tab: string, tiendaId: string) {
@@ -227,7 +374,7 @@ export class VendedorComponent implements OnInit {
         if (tiendas && tiendas.length > 0) {
           const t = tiendas[0];
           this.tienda.set(t);
-          this.refrescarPorTab(this.tabActiva(), t.id);
+          this.cargarTodoInicialTienda(t.id);
         } else {
           this.cargarFallbackTiendas();
         }
@@ -243,9 +390,15 @@ export class VendedorComponent implements OnInit {
       const t = verificadas[0] || tiendas[0];
       if (t) {
         this.tienda.set(t);
-        this.refrescarPorTab(this.tabActiva(), t.id);
+        this.cargarTodoInicialTienda(t.id);
       }
     });
+  }
+
+  private cargarTodoInicialTienda(tiendaId: string) {
+    this.cargarInventario(tiendaId);
+    this.cargarPedidosTienda(tiendaId);
+    this.cargarMensajesTienda(tiendaId);
   }
 
   cargarInventario(tiendaId: string) {
@@ -293,20 +446,72 @@ export class VendedorComponent implements OnInit {
     });
   }
 
-  responderCompatibilidad(msg: Mensaje) {
-    if (!this.tienda()) return;
+  seleccionarConversacionTienda(grupo: ConversacionTiendaGrupo) {
+    this.conversacionActivaKey.set(grupo.key);
+  }
+
+  enviarRespuestaTextoTienda() {
+    const texto = this.textoRespuestaTienda().trim();
+    const conv = this.conversacionSeleccionadaTienda();
+    const t = this.tienda();
+    if (!texto || !conv || !t || this.enviandoMensajeTienda()) return;
+
+    this.enviandoMensajeTienda.set(true);
     this.mensajesService
       .crearMensaje({
-        usuario_id: msg.usuario_id,
-        repuesto_id: msg.repuesto_id || undefined,
-        tienda_id: this.tienda()!.id,
-        remitente_nombre: `${this.tienda()!.nombre} (Especialista Técnico)`,
+        usuario_id: conv.usuarioId,
+        repuesto_id: conv.repuestoId || undefined,
+        tienda_id: t.id,
+        remitente_nombre: t.nombre,
         remitente_tipo: 'TIENDA',
-        texto: `Confirmado: Verificamos tu código OEM y chasis en catálogo original. Calce 100% garantizado y listo para despacho.`,
+        texto,
+        es_confirmacion_compatibilidad: false,
+      })
+      .subscribe({
+        next: (nuevo) => {
+          this.enviandoMensajeTienda.set(false);
+          this.textoRespuestaTienda.set('');
+          this.mensajesEntrantes.update((actuales) => {
+            if (actuales.some((m) => m.id === nuevo.id)) return actuales;
+            return [...actuales, nuevo];
+          });
+        },
+        error: () => {
+          this.enviandoMensajeTienda.set(false);
+          this.toast.error('No se pudo enviar la respuesta.');
+        },
+      });
+  }
+
+  confirmarCompatibilidadConversacion() {
+    const conv = this.conversacionSeleccionadaTienda();
+    const t = this.tienda();
+    if (!conv || !t || this.enviandoMensajeTienda()) return;
+
+    this.enviandoMensajeTienda.set(true);
+    this.mensajesService
+      .crearMensaje({
+        usuario_id: conv.usuarioId,
+        repuesto_id: conv.repuestoId || undefined,
+        tienda_id: t.id,
+        remitente_nombre: `${t.nombre} (Especialista Técnico)`,
+        remitente_tipo: 'TIENDA',
+        texto: `Confirmado: Verificamos tu código OEM y chasis en catálogo original. Calce 100% garantizado y listo para despacho inmediato.`,
         es_confirmacion_compatibilidad: true,
       })
-      .subscribe(() => {
-        this.cargarMensajesTienda(this.tienda()!.id);
+      .subscribe({
+        next: (nuevo) => {
+          this.enviandoMensajeTienda.set(false);
+          this.toast.exito('Compatibilidad 100% Confirmada', 'El comprador recibió la certificación en vivo.');
+          this.mensajesEntrantes.update((actuales) => {
+            if (actuales.some((m) => m.id === nuevo.id)) return actuales;
+            return [...actuales, nuevo];
+          });
+        },
+        error: () => {
+          this.enviandoMensajeTienda.set(false);
+          this.toast.error('No se pudo enviar la confirmación.');
+        },
       });
   }
 

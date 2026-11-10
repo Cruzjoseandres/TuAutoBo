@@ -35,4 +35,8 @@ export class MensajesService {
   obtenerConversacionesTienda(tienda_id: string): Observable<Mensaje[]> {
     return this.http.get<Mensaje[]>(`${this.apiUrl}/tienda/${tienda_id}`);
   }
+
+  obtenerConversacionesComprador(usuario_id: string): Observable<Mensaje[]> {
+    return this.http.get<Mensaje[]>(`${this.apiUrl}/comprador/${usuario_id}`);
+  }
 }

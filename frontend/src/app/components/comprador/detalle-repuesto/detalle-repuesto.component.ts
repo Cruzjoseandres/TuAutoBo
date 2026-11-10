@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   AuthService,
   RepuestosService,
@@ -10,6 +11,7 @@ import {
   TipoCambioService,
   ToastService,
   NavigationContextService,
+  SocketService,
 } from '../../../services';
 import { Repuesto, ResenaRepuesto, Tienda, Mensaje } from '../../../models';
 import { IconComponent } from '../../../ui';
@@ -20,7 +22,7 @@ import { IconComponent } from '../../../ui';
   imports: [CommonModule, FormsModule, RouterLink, IconComponent],
   templateUrl: './detalle-repuesto.component.html',
 })
-export class DetalleRepuestoComponent implements OnInit {
+export class DetalleRepuestoComponent implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
   protected readonly navContext = inject(NavigationContextService);
   private readonly route = inject(ActivatedRoute);
@@ -30,6 +32,8 @@ export class DetalleRepuestoComponent implements OnInit {
   private readonly mensajesService = inject(MensajesService);
   private readonly tipoCambioService = inject(TipoCambioService);
   private readonly toast = inject(ToastService);
+  private readonly socketService = inject(SocketService);
+  private subs = new Subscription();
 
   repuesto = signal<Repuesto | null>(null);
   resenas = signal<ResenaRepuesto[]>([]);
@@ -76,6 +80,35 @@ export class DetalleRepuestoComponent implements OnInit {
     } else {
       this.router.navigate(['/comprador']);
     }
+
+    this.subs.add(
+      this.socketService.nuevoMensaje$.subscribe((msg) => {
+        const rep = this.repuesto();
+        const user = this.auth.usuarioActual();
+        if (!rep || !user) return;
+        if (msg.usuario_id === user.id && msg.tienda_id === rep.tienda_id && msg.repuesto_id === rep.id) {
+          this.mensajesChat.update((actuales) => {
+            if (actuales.some((m) => m.id === msg.id)) return actuales;
+            return [...actuales, msg];
+          });
+        }
+      }),
+    );
+  }
+
+  ngOnDestroy() {
+    this.subs.unsubscribe();
+  }
+
+  abrirEnMisMensajes() {
+    const rep = this.repuesto();
+    if (!rep) return;
+    this.router.navigate(['/comprador', 'mensajes'], {
+      queryParams: {
+        tienda_id: rep.tienda_id,
+        repuesto_id: rep.id,
+      },
+    });
   }
 
   cargarDetalle(id: string) {

@@ -201,39 +201,29 @@ import { ToastService } from '../../services/toast.service';
                 }
               </div>
 
-              <!-- Campo 2: Dirección Escrita / Zona -->
-              <div>
-                <label class="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 mb-1">
-                  Dirección Escrita / Zona <span class="text-rose-500 font-bold">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="nuevaDireccion"
-                  (input)="errorDireccion.set('')"
-                  placeholder="Ej. Av. Banzer y 5to Anillo #230"
-                  [class.border-rose-500]="errorDireccion()"
-                  [class.focus:ring-rose-500]="errorDireccion()"
-                  class="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-xs focus:ring-2 focus:ring-[#0071E3] focus:outline-none text-neutral-900 dark:text-white transition-all"
-                />
-                @if (errorDireccion()) {
-                  <p class="mt-1 text-[11px] text-rose-500 flex items-center space-x-1 animate-fadeIn">
-                    <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                    <span>{{ errorDireccion() }}</span>
+              <!-- Ubicación detectada en Maps (Automática por Pin GPS) -->
+              <div class="p-3 rounded-xl bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/20 flex items-start space-x-2.5">
+                <svg class="w-4 h-4 text-[#0071E3] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+                <div class="min-w-0 flex-1">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071E3] block">Punto Seleccionado en Mapa</span>
+                  <p class="text-xs font-semibold text-neutral-900 dark:text-white truncate">
+                    {{ nuevaDireccion() || ('Ubicación GPS (' + latitudSeleccionada().toFixed(4) + ', ' + longitudSeleccionada().toFixed(4) + ')') }}
                   </p>
-                }
+                </div>
               </div>
 
-              <!-- Campo 3: Referencia para el Repartidor (Opcional) -->
+              <!-- Campo 2: Referencia de fachada / Nro. de casa (Opcional) -->
               <div>
                 <label class="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 mb-1">
-                  Referencia para el Repartidor <span class="text-neutral-400 font-normal">(Opcional)</span>
+                  Referencia de fachada / Nro. de casa <span class="text-neutral-400 font-normal">(Opcional)</span>
                 </label>
                 <input 
                   type="text" 
                   [(ngModel)]="nuevaReferencia"
-                  placeholder="Ej. Portón blanco, frente al surtidor"
+                  placeholder="Ej. Portón blanco #230, frente al surtidor"
                   class="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-xs focus:ring-2 focus:ring-[#0071E3] focus:outline-none text-neutral-900 dark:text-white"
                 />
               </div>
@@ -422,7 +412,8 @@ export class UbicacionModalComponent implements OnDestroy {
       this.actualizarCoordenadas(lat, lng);
     });
 
-    // Redimensionar después de renderizar en el modal
+    // Redimensionar después de renderizar en el modal y obtener nombre de calle inicial
+    this.consultarGeocodificacionInversa(defaultLat, defaultLng);
     setTimeout(() => {
       this.map?.invalidateSize();
     }, 250);
@@ -475,24 +466,28 @@ export class UbicacionModalComponent implements OnDestroy {
   }
 
   private consultarGeocodificacionInversa(lat: number, lng: number) {
-    // Si la dirección escrita está vacía, sugerir la calle o barrio según Nominatim OpenStreetMap
-    if (!this.nuevaDireccion().trim()) {
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-        headers: { 'Accept-Language': 'es' },
+    const fallbackCoords = `Punto en Mapa (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+      headers: { 'Accept-Language': 'es' },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.display_name) {
+          const calle = data.address?.road || data.address?.neighbourhood || data.address?.suburb || '';
+          const barrio = data.address?.suburb || data.address?.neighbourhood || '';
+          const ciudad = data.address?.city || data.address?.town || 'Santa Cruz de la Sierra';
+          const partes = [calle, barrio && barrio !== calle ? barrio : '', ciudad].filter(Boolean);
+          const sugerencia = partes.length > 0 ? partes.join(', ') : data.display_name.split(',').slice(0, 3).join(',');
+          this.nuevaDireccion.set(sugerencia);
+        } else {
+          this.nuevaDireccion.set(fallbackCoords);
+        }
       })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data && data.display_name && !this.nuevaDireccion().trim()) {
-            const calle = data.address?.road || data.address?.neighbourhood || data.address?.suburb || '';
-            const ciudad = data.address?.city || 'Santa Cruz de la Sierra';
-            const sugerencia = calle ? `${calle}, ${ciudad}` : data.display_name.split(',').slice(0, 3).join(',');
-            this.nuevaDireccion.set(sugerencia);
-          }
-        })
-        .catch(() => {
-          // Silencioso ante fallos de red externa
-        });
-    }
+      .catch(() => {
+        if (!this.nuevaDireccion().trim()) {
+          this.nuevaDireccion.set(fallbackCoords);
+        }
+      });
   }
 
   private destruirMapa() {
@@ -505,28 +500,21 @@ export class UbicacionModalComponent implements OnDestroy {
 
   guardarDireccion() {
     this.limpiarErrores();
-    let hayErrores = false;
-
     if (!this.nuevoAlias().trim()) {
       this.errorAlias.set('El nombre o alias es obligatorio (ej. Mi Taller, Casa).');
-      hayErrores = true;
-    }
-
-    if (!this.nuevaDireccion().trim()) {
-      this.errorDireccion.set('La dirección escrita o zona es obligatoria.');
-      hayErrores = true;
-    }
-
-    if (hayErrores) {
       return;
     }
+
+    const direccionMapa =
+      this.nuevaDireccion().trim() ||
+      `Punto en Mapa (${this.latitudSeleccionada().toFixed(4)}, ${this.longitudSeleccionada().toFixed(4)})`;
 
     this.guardando.set(true);
 
     this.ubicacionService
       .agregarNuevaDireccion({
         alias: this.nuevoAlias().trim(),
-        direccion_escrita: this.nuevaDireccion().trim(),
+        direccion_escrita: direccionMapa,
         referencia: this.nuevaReferencia().trim(),
         latitud: this.latitudSeleccionada(),
         longitud: this.longitudSeleccionada(),

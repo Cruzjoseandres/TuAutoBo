@@ -19,6 +19,7 @@ import { RepuestosModule } from './repuestos/repuestos.module';
 import { PedidosModule } from './pedidos/pedidos.module';
 import { MensajesModule } from './mensajes/mensajes.module';
 import { UploadModule } from './upload/upload.module';
+import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { UploadModule } from './upload/upload.module';
     PedidosModule,
     MensajesModule,
     UploadModule,
+    RealtimeModule,
   ],
   controllers: [],
   providers: [],

@@ -7,6 +7,7 @@ import { UsuariosService } from '../usuarios/usuarios.service';
 import { TiposVehiculoService } from '../tipos-vehiculo/tipos-vehiculo.service';
 import { TipoVehiculo } from '../tipos-vehiculo/entities/tipo-vehiculo.entity';
 import { TipoVehiculoEnum, TamanoRepuestoEnum, RolEnum } from '../common/enums';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class RepartidoresService {
@@ -15,6 +16,7 @@ export class RepartidoresService {
     private readonly repartidorRepository: Repository<Repartidor>,
     private readonly usuariosService: UsuariosService,
     private readonly tiposVehiculoService: TiposVehiculoService,
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   async findAll(): Promise<Repartidor[]> {
@@ -103,7 +105,16 @@ export class RepartidoresService {
       esta_verificado: false,
     });
 
-    return this.repartidorRepository.save(nuevoRep);
+    const guardado = await this.repartidorRepository.save(nuevoRep);
+    const completo = await this.findById(guardado.id);
+    this.realtimeGateway.emitirSolicitudAfiliacion({
+      tipo: 'REPARTIDOR',
+      id: completo.id,
+      nombre: completo.usuario?.nombre_completo || body.nombre_completo,
+      detalle: `${completo.tipo_vehiculo} • Placa ${completo.placa}`,
+      creado_en: completo.creado_en,
+    });
+    return completo;
   }
 
   async aprobarRepartidor(id: string): Promise<Repartidor> {
@@ -111,7 +122,13 @@ export class RepartidoresService {
     rep.esta_verificado = true;
     rep.esta_activo = true;
     await this.usuariosService.cambiarEstadoCuenta(rep.usuario_id, 'ACTIVO');
-    return this.repartidorRepository.save(rep);
+    const guardado = await this.repartidorRepository.save(rep);
+    this.realtimeGateway.emitirSolicitudActualizada({
+      tipo: 'REPARTIDOR',
+      id: guardado.id,
+      estado: 'APROBADO',
+    });
+    return guardado;
   }
 
   async rechazarRepartidor(id: string): Promise<Repartidor> {
@@ -119,7 +136,13 @@ export class RepartidoresService {
     rep.esta_verificado = false;
     rep.esta_activo = false;
     await this.usuariosService.cambiarEstadoCuenta(rep.usuario_id, 'RECHAZADO');
-    return this.repartidorRepository.save(rep);
+    const guardado = await this.repartidorRepository.save(rep);
+    this.realtimeGateway.emitirSolicitudActualizada({
+      tipo: 'REPARTIDOR',
+      id: guardado.id,
+      estado: 'RECHAZADO',
+    });
+    return guardado;
   }
 
   async actualizarUbicacion(id: string, latitud: number, longitud: number): Promise<Repartidor> {
