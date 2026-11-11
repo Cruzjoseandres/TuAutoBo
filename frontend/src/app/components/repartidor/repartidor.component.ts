@@ -91,6 +91,30 @@ export class RepartidorComponent implements OnInit {
         const rep = this.perfil();
         if (!rep) return;
 
+        // Actualización in-place inmediata si el pedido está asignado a este repartidor
+        if (evento.pedido?.repartidor_id === rep.id) {
+          if (evento.pedido.estado === 'COMPLETADO') {
+            if (this.miPedidoEnCurso()?.id === evento.pedido.id) {
+              this.miPedidoEnCurso.set(null);
+            }
+            this.historialCarreras.update((actuales) => {
+              if (actuales.some((p) => p.id === evento.pedido.id)) {
+                return actuales.map((p) => (p.id === evento.pedido.id ? { ...p, ...evento.pedido } : p));
+              }
+              return [evento.pedido, ...actuales];
+            });
+          } else {
+            this.miPedidoEnCurso.set(evento.pedido);
+          }
+        }
+
+        // Si otro repartidor tomó un pedido de la bolsa disponible, removerlo de inmediato
+        if (evento.pedido && evento.pedido.estado !== 'EN_PREPARACION') {
+          this.carrerasDisponibles.update((actuales) =>
+            actuales.filter((p) => p.id !== evento.pedido.id),
+          );
+        }
+
         this.cargarPedidosDisponibles(rep.id);
         this.cargarPedidoEnCurso(rep.id);
         this.cargarHistorial(rep.id);
@@ -194,13 +218,24 @@ export class RepartidorComponent implements OnInit {
     });
   }
 
-  async cargarPedidosDisponibles(repartidorId: string) {
-    const coords = await this.obtenerUbicacionActual();
+  cargarPedidosDisponibles(repartidorId: string) {
+    const coordsActuales = this.posicionRepartidor();
     this.pedidosService
-      .obtenerDisponiblesParaRepartidor(repartidorId, coords?.lat, coords?.lon)
+      .obtenerDisponiblesParaRepartidor(repartidorId, coordsActuales?.lat, coordsActuales?.lon)
       .subscribe((peds) => {
         this.carrerasDisponibles.set(peds);
       });
+
+    // Actualizar coordenadas GPS en segundo plano sin bloquear la consulta inmediata
+    this.obtenerUbicacionActual().then((coords) => {
+      if (coords && (!coordsActuales || coords.lat !== coordsActuales.lat || coords.lon !== coordsActuales.lon)) {
+        this.pedidosService
+          .obtenerDisponiblesParaRepartidor(repartidorId, coords.lat, coords.lon)
+          .subscribe((peds) => {
+            this.carrerasDisponibles.set(peds);
+          });
+      }
+    });
   }
 
   avanzarPaso(pedido: Pedido, nuevoEstado: string) {

@@ -27,6 +27,34 @@ export class MensajesService {
       await this.repuestosService.findById(dto.repuesto_id);
     }
 
+    // Garantizar idempotencia en confirmación de compatibilidad OEM por hilo (usuario + tienda + repuesto)
+    if (dto.es_confirmacion_compatibilidad) {
+      const qbExistente = this.mensajeRepository
+        .createQueryBuilder('mensaje')
+        .leftJoinAndSelect('mensaje.usuario', 'usuario')
+        .leftJoinAndSelect('mensaje.tienda', 'tienda')
+        .leftJoinAndSelect('mensaje.repuesto', 'repuesto')
+        .where(
+          'mensaje.usuario_id = :usuarioId AND mensaje.tienda_id = :tiendaId AND mensaje.es_confirmacion_compatibilidad = :esConf',
+          {
+            usuarioId: dto.usuario_id,
+            tiendaId: dto.tienda_id,
+            esConf: true,
+          },
+        );
+
+      if (dto.repuesto_id) {
+        qbExistente.andWhere('mensaje.repuesto_id = :repuestoId', { repuestoId: dto.repuesto_id });
+      } else {
+        qbExistente.andWhere('mensaje.repuesto_id IS NULL');
+      }
+
+      const yaConfirmado = await qbExistente.getOne();
+      if (yaConfirmado) {
+        return yaConfirmado;
+      }
+    }
+
     const nuevo = this.mensajeRepository.create({
       texto: dto.texto,
       url_imagen: dto.url_imagen ?? null,
@@ -72,6 +100,8 @@ export class MensajesService {
       qb.andWhere('mensaje.repuesto_id = :repuestoId', {
         repuestoId,
       });
+    } else {
+      qb.andWhere('mensaje.repuesto_id IS NULL');
     }
 
     qb.orderBy('mensaje.creado_en', 'ASC');

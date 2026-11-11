@@ -152,29 +152,36 @@
                 Toca cualquier punto del mapa o arrastra el pin azul <strong>📍</strong> hasta la puerta exacta de tu domicilio o taller. El repartidor recibirá esta ubicación de Maps para navegar directo.
               </p>
 
-              <!-- Resumen del Punto Seleccionado en Mapa + Referencia Opcional -->
+              <!-- Campos: Dirección (llenada automáticamente desde la ubicación superior o mapa) + Referencia -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <div class="p-3 rounded-xl bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/20 flex flex-col justify-center">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071E3]">Ubicación Detectada en Maps</span>
-                  <span class="text-xs font-bold text-neutral-900 dark:text-white mt-0.5 line-clamp-1">
-                    {{ aliasUbicacion() }}
-                  </span>
-                  <span class="text-[11px] text-neutral-600 dark:text-neutral-300 line-clamp-1">
-                    {{ direccionEntrega() || ('Coords: ' + latitudDestino().toFixed(4) + ', ' + longitudDestino().toFixed(4)) }}
-                  </span>
+                <div>
+                  <label class="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
+                    Dirección
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="direccionEntrega"
+                    placeholder="ej. Av. Las Américas #340"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
+                  />
                 </div>
 
                 <div>
                   <label class="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
-                    Referencia de fachada / Nro. de casa <span class="text-neutral-400 font-normal">(Opcional)</span>
+                    Referencia para el Repartidor
                   </label>
                   <input
                     type="text"
                     [(ngModel)]="referenciaEntrega"
-                    placeholder="Ej. Portón negro #340, Taller El Cristo"
+                    placeholder="ej. Portón negro, Taller El Cristo"
                     class="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
                   />
                 </div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-neutral-50 dark:bg-white/[0.04] border border-neutral-100 dark:border-white/[0.08] flex items-center justify-between text-[11px] text-neutral-600 dark:text-neutral-300">
+                <span>Origen: <strong>{{ rep.tienda?.nombre }}</strong> ({{ rep.tienda?.direccion_escrita }})</span>
+                <span class="font-mono font-semibold text-neutral-900 dark:text-white">Distancia aprox: {{ distanciaKm().toFixed(1) }} km</span>
               </div>
             </div>
           } @else {

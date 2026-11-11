@@ -308,7 +308,7 @@ export class PedidosService {
     }
 
     // Liberar escrow y descontar stock físicamente
-    await this.repuestosService.descontarStockDefinitivo(pedido.repuesto_id, 1);
+    await this.repuestosService.descontarStockDefinitivo(pedido.repuesto_id, pedido.cantidad || 1);
 
     pedido.estado = EstadoPedidoEnum.COMPLETADO;
     await this.pedidoRepository.save(pedido);
@@ -334,7 +334,7 @@ export class PedidosService {
     }
 
     // Reintegrar stock al inventario de la tienda
-    await this.repuestosService.liberarStock(pedido.repuesto_id, 1);
+    await this.repuestosService.liberarStock(pedido.repuesto_id, pedido.cantidad || 1);
 
     pedido.estado = EstadoPedidoEnum.REEMBOLSADO;
     await this.pedidoRepository.save(pedido);

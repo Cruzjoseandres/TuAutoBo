@@ -19,9 +19,11 @@
           <div>
             <div class="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Nueva Versión v{{ versionService.infoActualizacion()?.version }}</span>
+              <span>{{ versionService.infoActualizacion()?.obligatoria ? 'Actualización Obligatoria' : 'Nueva Versión' }} v{{ versionService.infoActualizacion()?.version }}</span>
             </div>
-            <h3 class="text-lg font-bold text-neutral-900 dark:text-white mt-1">¡Actualización Disponible!</h3>
+            <h3 class="text-lg font-bold text-neutral-900 dark:text-white mt-1">
+              {{ versionService.infoActualizacion()?.obligatoria ? 'Actualización Requerida para Continuar' : '¡Actualización Disponible!' }}
+            </h3>
           </div>
         </div>
 
@@ -34,7 +36,7 @@
         </div>
 
         <p class="text-xs text-neutral-500 dark:text-neutral-400">
-          Tu sesión y tus datos se conservarán intactos al actualizar el APK.
+          {{ versionService.infoActualizacion()?.obligatoria ? 'Debes instalar esta versión para seguir operando en tiempo real. Tu sesión y tus datos se conservarán intactos.' : 'Tu sesión y tus datos se conservarán intactos al actualizar el APK.' }}
         </p>
 
         <!-- Botones de Acción -->

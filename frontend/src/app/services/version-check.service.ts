@@ -18,7 +18,7 @@ export class VersionCheckService {
   private readonly http = inject(HttpClient);
 
   // Versión local actual instalada en la aplicación
-  readonly VERSION_ACTUAL = '1.0.0';
+  readonly VERSION_ACTUAL = '1.2.0';
 
   // Detecta si se está ejecutando dentro del contenedor nativo APK Android (Capacitor)
   readonly esAppNativa = signal<boolean>(this.detectarPlataformaNativa());
@@ -31,6 +31,13 @@ export class VersionCheckService {
 
   constructor() {
     this.verificarVersion();
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          this.verificarVersion();
+        }
+      });
+    }
   }
 
   private detectarPlataformaNativa(): boolean {

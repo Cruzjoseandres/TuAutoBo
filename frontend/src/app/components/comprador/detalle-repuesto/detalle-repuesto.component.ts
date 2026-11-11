@@ -58,6 +58,7 @@ export class DetalleRepuestoComponent implements OnInit, OnDestroy {
 
   // Formulario chat técnico
   nuevoMensaje = signal<string>('');
+  enviandoMensajeChat = signal<boolean>(false);
 
   promedioCalificacion = computed<number | null>(() => {
     const lista = this.resenas();
@@ -113,6 +114,7 @@ export class DetalleRepuestoComponent implements OnInit, OnDestroy {
 
   cargarDetalle(id: string) {
     this.cargando.set(true);
+    this.mensajesChat.set([]);
     this.repuestosService.findById(id).subscribe({
       next: (rep) => {
         this.repuesto.set(rep);
@@ -166,15 +168,18 @@ export class DetalleRepuestoComponent implements OnInit, OnDestroy {
     const usuarioId = this.auth.usuarioActual()?.id || '';
     this.mensajesService
       .obtenerHistorialChat(usuarioId, tiendaId, repuestoId)
-      .subscribe((m: Mensaje[]) => this.mensajesChat.set(m));
+      .subscribe((m: Mensaje[]) => {
+        this.mensajesChat.set((m || []).filter((msg) => msg.repuesto_id === repuestoId));
+      });
   }
 
   enviarMensajeChat() {
     const texto = this.nuevoMensaje().trim();
     const rep = this.repuesto();
     const user = this.auth.usuarioActual();
-    if (!texto || !rep || !user) return;
+    if (!texto || !rep || !user || this.enviandoMensajeChat()) return;
 
+    this.enviandoMensajeChat.set(true);
     this.mensajesService
       .crearMensaje({
         usuario_id: user.id,
@@ -184,10 +189,20 @@ export class DetalleRepuestoComponent implements OnInit, OnDestroy {
         remitente_tipo: 'COMPRADOR',
         texto,
       })
-      .subscribe(() => {
-        this.nuevoMensaje.set('');
-        this.cargarChat(rep.id, rep.tienda_id);
-        this.toast.info('Consulta técnica enviada al especialista de la repuestera');
+      .subscribe({
+        next: (nuevo) => {
+          this.enviandoMensajeChat.set(false);
+          this.nuevoMensaje.set('');
+          this.mensajesChat.update((actuales) => {
+            if (actuales.some((m) => m.id === nuevo.id)) return actuales;
+            return [...actuales, nuevo];
+          });
+          this.toast.info('Consulta técnica enviada al especialista de la repuestera');
+        },
+        error: () => {
+          this.enviandoMensajeChat.set(false);
+          this.toast.error('No se pudo enviar el mensaje.');
+        },
       });
   }
 

@@ -121,6 +121,10 @@ export class VendedorComponent implements OnInit {
     () => this.conversacionesTienda().filter((c) => c.pendienteRespuesta).length,
   );
 
+  yaConfirmadaCompatibilidad = computed(() =>
+    !!this.conversacionSeleccionadaTienda()?.mensajes.some((m) => m.es_confirmacion_compatibilidad),
+  );
+
   // Control de entrega en mostrador (Retiro en Tienda)
   pinRetiroTienda = signal<Record<string, string>>({});
   errorPinTienda = signal<Record<string, string>>({});
@@ -308,6 +312,15 @@ export class VendedorComponent implements OnInit {
         const t = this.tienda();
         if (!t || evento.pedido?.tienda_id !== t.id) return;
 
+        // Actualización in-place inmediata de la lista de órdenes de la tienda
+        this.pedidosRecibidos.update((actuales) => {
+          const existe = actuales.some((p) => p.id === evento.pedido.id);
+          if (existe) {
+            return actuales.map((p) => (p.id === evento.pedido.id ? { ...p, ...evento.pedido } : p));
+          }
+          return [evento.pedido, ...actuales];
+        });
+
         this.cargarPedidosTienda(t.id);
         this.cargarInventario(t.id);
 
@@ -320,17 +333,19 @@ export class VendedorComponent implements OnInit {
               textoAccion: 'Ver Orden',
             },
           );
-        } else if (evento.accion === 'REPARTIDOR_ASIGNADO' || evento.accion === 'ESTADO_AVANZADO') {
-          if (this.tabActiva() !== 'pedidos') {
-            this.toast.info(
-              `🛵 Orden ${evento.pedido.numero_orden} en movimiento`,
-              `Nuevo estado: ${evento.pedido.estado.replace(/_/g, ' ')}`,
-              {
-                rutaDestino: ['/vendedor', 'pedidos'],
-                textoAccion: 'Ver Estado',
-              },
-            );
-          }
+        } else if (
+          evento.accion === 'REPARTIDOR_ASIGNADO' ||
+          evento.accion === 'ESTADO_AVANZADO' ||
+          evento.accion === 'COMPLETADO'
+        ) {
+          this.toast.info(
+            `🛵 Orden ${evento.pedido.numero_orden} actualizada`,
+            `Nuevo estado: ${evento.pedido.estado.replace(/_/g, ' ')}`,
+            {
+              rutaDestino: ['/vendedor', 'pedidos'],
+              textoAccion: 'Ver Estado',
+            },
+          );
         }
       });
   }
@@ -486,7 +501,7 @@ export class VendedorComponent implements OnInit {
   confirmarCompatibilidadConversacion() {
     const conv = this.conversacionSeleccionadaTienda();
     const t = this.tienda();
-    if (!conv || !t || this.enviandoMensajeTienda()) return;
+    if (!conv || !t || this.enviandoMensajeTienda() || this.yaConfirmadaCompatibilidad()) return;
 
     this.enviandoMensajeTienda.set(true);
     this.mensajesService

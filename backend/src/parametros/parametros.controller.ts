@@ -24,24 +24,36 @@ export class ParametrosController {
   @Get('app-version')
   @ApiOperation({ summary: 'Consultar versión oficial de la aplicación móvil APK (Público)' })
   async getAppVersion() {
-    const version = await this.parametrosService.obtener('APP_VERSION_ANDROID', '1.0.0');
+    const VERSION_OFICIAL = '1.2.0';
+    const versionDb = await this.parametrosService.obtener('APP_VERSION_ANDROID', VERSION_OFICIAL);
+    const version = this.esVersionMayor(VERSION_OFICIAL, versionDb) ? VERSION_OFICIAL : versionDb;
+
     const apkUrl = await this.parametrosService.obtener(
       'APP_APK_URL',
       'https://github.com/Cruzjoseandres/TuAutoBo/releases/latest/download/TuAuto.apk',
     );
     const novedades = await this.parametrosService.obtener(
       'APP_NOVEDADES_ACTUALIZACION',
-      'Nueva versión con optimización de mapas GPS, cotización de envíos y catálogo automotriz en vivo.',
+      'Actualización obligatoria v1.2.0: Ubicaciones de entrega con pin exacto en Maps, bandeja de chats en vivo (Comprador y Tienda) y estados de pedidos en tiempo real con WebSockets.',
     );
-    const obligatoria = (await this.parametrosService.obtener('APP_ACTUALIZACION_OBLIGATORIA', 'false')) === 'true';
 
     return {
       version,
       apk_url: apkUrl,
       novedades,
-      obligatoria,
+      obligatoria: true,
       fecha_actualizacion: new Date().toISOString(),
     };
+  }
+
+  private esVersionMayor(vA: string, vB: string): boolean {
+    const a = (vA || '').split('.').map((n) => parseInt(n, 10) || 0);
+    const b = (vB || '').split('.').map((n) => parseInt(n, 10) || 0);
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      if ((a[i] || 0) > (b[i] || 0)) return true;
+      if ((a[i] || 0) < (b[i] || 0)) return false;
+    }
+    return false;
   }
 
   @Get(':clave')

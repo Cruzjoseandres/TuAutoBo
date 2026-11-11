@@ -210,35 +210,32 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       maxZoom: 19,
     }).addTo(this.mapCheckout);
 
-    // Pin de la Tienda (Origen)
+    // Pin de la Tienda (Origen) sin doble transform
     const iconoTienda = L.divIcon({
       className: 'apple-map-pin-container',
       html: `
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center; width: 36px; height: 36px; transform: translate(-50%, -100%);">
-          <div style="background: #10B981; color: white; border-radius: 9999px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16,185,129,0.45); border: 2px solid white; font-size: 14px;">
-            🏪
-          </div>
+        <div style="width: 30px; height: 30px; background: #10B981; color: white; border-radius: 9999px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16,185,129,0.45); border: 2px solid white; font-size: 14px;">
+          🏪
         </div>
       `,
-      iconSize: [36, 36],
-      iconAnchor: [18, 36],
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
     });
 
-    // Pin del Comprador (Destino arrastrable)
+    // Pin del Comprador (Destino arrastrable con punta exacta en 16, 42)
     const iconoDestino = L.divIcon({
       className: 'apple-map-pin-container',
       html: `
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center; width: 40px; height: 40px; transform: translate(-50%, -100%);">
-          <div style="background: #0071E3; color: white; border-radius: 9999px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,113,227,0.5); border: 2.5px solid white;">
-            <svg style="width: 17px; height: 17px;" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-            </svg>
-          </div>
-          <div style="width: 10px; height: 4px; background: rgba(0,0,0,0.35); border-radius: 9999px; margin-top: 2px;"></div>
+        <div style="width: 32px; height: 42px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; filter: drop-shadow(0 4px 8px rgba(0,113,227,0.45));">
+          <svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 0C7.163 0 0 7.163 0 16C0 26.8 14.2 40.4 15.3 41.45C15.7 41.82 16.3 41.82 16.7 41.45C17.8 40.4 32 26.8 32 16C32 7.163 24.837 0 16 0Z" fill="#0071E3"/>
+            <path d="M16 1.5C24.008 1.5 30.5 7.992 30.5 16C30.5 25.65 18.25 37.95 16 40.15C13.75 37.95 1.5 25.65 1.5 16C1.5 7.992 7.992 1.5 16 1.5Z" stroke="white" stroke-width="2"/>
+            <circle cx="16" cy="15" r="5.5" fill="white"/>
+          </svg>
         </div>
       `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
+      iconSize: [32, 42],
+      iconAnchor: [16, 42],
     });
 
     this.markerTienda = L.marker([latTienda, lngTienda], { icon: iconoTienda })

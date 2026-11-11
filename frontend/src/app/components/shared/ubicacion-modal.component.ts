@@ -201,24 +201,31 @@ import { ToastService } from '../../services/toast.service';
                 }
               </div>
 
-              <!-- Ubicación detectada en Maps (Automática por Pin GPS) -->
-              <div class="p-3 rounded-xl bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/20 flex items-start space-x-2.5">
-                <svg class="w-4 h-4 text-[#0071E3] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                </svg>
-                <div class="min-w-0 flex-1">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071E3] block">Punto Seleccionado en Mapa</span>
-                  <p class="text-xs font-semibold text-neutral-900 dark:text-white truncate">
-                    {{ nuevaDireccion() || ('Ubicación GPS (' + latitudSeleccionada().toFixed(4) + ', ' + longitudSeleccionada().toFixed(4) + ')') }}
-                  </p>
-                </div>
-              </div>
-
-              <!-- Campo 2: Referencia de fachada / Nro. de casa (Opcional) -->
+              <!-- Campo 2: Dirección (Se llena automáticamente desde el Mapa / GPS) -->
               <div>
                 <label class="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 mb-1">
-                  Referencia de fachada / Nro. de casa <span class="text-neutral-400 font-normal">(Opcional)</span>
+                  Dirección <span class="text-rose-500 font-bold">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="nuevaDireccion"
+                  (input)="errorDireccion.set('')"
+                  placeholder="Selecciona un punto en el mapa o escribe la dirección..."
+                  [class.border-rose-500]="errorDireccion()"
+                  [class.focus:ring-rose-500]="errorDireccion()"
+                  class="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-xs focus:ring-2 focus:ring-[#0071E3] focus:outline-none text-neutral-900 dark:text-white transition-all"
+                />
+                @if (errorDireccion()) {
+                  <p class="mt-1 text-[11px] text-rose-500 flex items-center space-x-1 animate-fadeIn">
+                    <span>{{ errorDireccion() }}</span>
+                  </p>
+                }
+              </div>
+
+              <!-- Campo 3: Referencia para el Repartidor (Opcional) -->
+              <div>
+                <label class="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 mb-1">
+                  Referencia para el Repartidor <span class="text-neutral-400 font-normal">(Opcional)</span>
                 </label>
                 <input 
                   type="text" 
@@ -308,6 +315,7 @@ export class UbicacionModalComponent implements OnDestroy {
 
   private map: L.Map | null = null;
   private marker: L.Marker | null = null;
+  private accuracyCircle: L.Circle | null = null;
 
   @HostListener('window:keydown.escape')
   onEscape() {
@@ -373,21 +381,20 @@ export class UbicacionModalComponent implements OnDestroy {
       maxZoom: 19,
     }).addTo(this.map);
 
-    // Icono Apple Pin Personalizado
+    // Icono Pin con Punta Exacta en (16, 42) — sin doble transform para precisión milimétrica
     const pinIcon = L.divIcon({
       className: 'apple-map-pin-container',
       html: `
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 36px; height: 36px; transform: translate(-50%, -100%);">
-          <div style="background: #0071E3; color: white; border-radius: 9999px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,113,227,0.45); border: 2.5px solid white;">
-            <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-            </svg>
-          </div>
-          <div style="width: 8px; height: 3px; background: rgba(0,0,0,0.3); border-radius: 9999px; margin-top: 2px; filter: blur(1px);"></div>
+        <div style="width: 32px; height: 42px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; filter: drop-shadow(0 4px 8px rgba(0,113,227,0.45));">
+          <svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 0C7.163 0 0 7.163 0 16C0 26.8 14.2 40.4 15.3 41.45C15.7 41.82 16.3 41.82 16.7 41.45C17.8 40.4 32 26.8 32 16C32 7.163 24.837 0 16 0Z" fill="#0071E3"/>
+            <path d="M16 1.5C24.008 1.5 30.5 7.992 30.5 16C30.5 25.65 18.25 37.95 16 40.15C13.75 37.95 1.5 25.65 1.5 16C1.5 7.992 7.992 1.5 16 1.5Z" stroke="white" stroke-width="2"/>
+            <circle cx="16" cy="15" r="5.5" fill="white"/>
+          </svg>
         </div>
       `,
-      iconSize: [36, 36],
-      iconAnchor: [18, 36],
+      iconSize: [32, 42],
+      iconAnchor: [16, 42],
     });
 
     // Marcador interactivo y arrastrable
@@ -444,12 +451,24 @@ export class UbicacionModalComponent implements OnDestroy {
         this.longitudSeleccionada.set(lng);
 
         if (this.map && this.marker) {
+          this.map.invalidateSize();
           this.marker.setLatLng([lat, lng]);
-          this.map.flyTo([lat, lng], 16, { animate: true, duration: 1 });
+          if (this.accuracyCircle) {
+            this.accuracyCircle.setLatLng([lat, lng]);
+          } else {
+            this.accuracyCircle = L.circle([lat, lng], {
+              radius: Math.min(Math.max(position.coords.accuracy || 15, 10), 45),
+              color: '#0071E3',
+              fillColor: '#0071E3',
+              fillOpacity: 0.15,
+              weight: 1.5,
+            }).addTo(this.map);
+          }
+          this.map.setView([lat, lng], 17, { animate: true });
         }
 
         this.consultarGeocodificacionInversa(lat, lng);
-        this.toast.info('Ubicación detectada', 'Se centró el mapa en tu posición GPS actual.');
+        this.toast.info('Ubicación detectada', 'La punta del pin marca tu posición GPS exacta.');
       },
       (error) => {
         this.obteniendoGps.set(false);
@@ -473,12 +492,14 @@ export class UbicacionModalComponent implements OnDestroy {
       .then((res) => res.json())
       .then((data) => {
         if (data && data.display_name) {
-          const calle = data.address?.road || data.address?.neighbourhood || data.address?.suburb || '';
+          const calle = data.address?.road || data.address?.pedestrian || data.address?.neighbourhood || data.address?.suburb || '';
+          const numero = data.address?.house_number ? ` #${data.address.house_number}` : '';
           const barrio = data.address?.suburb || data.address?.neighbourhood || '';
           const ciudad = data.address?.city || data.address?.town || 'Santa Cruz de la Sierra';
-          const partes = [calle, barrio && barrio !== calle ? barrio : '', ciudad].filter(Boolean);
+          const partes = [calle ? `${calle}${numero}` : '', barrio && barrio !== calle ? barrio : '', ciudad].filter(Boolean);
           const sugerencia = partes.length > 0 ? partes.join(', ') : data.display_name.split(',').slice(0, 3).join(',');
           this.nuevaDireccion.set(sugerencia);
+          this.errorDireccion.set('');
         } else {
           this.nuevaDireccion.set(fallbackCoords);
         }
@@ -495,6 +516,7 @@ export class UbicacionModalComponent implements OnDestroy {
       this.map.remove();
       this.map = null;
       this.marker = null;
+      this.accuracyCircle = null;
     }
   }
 

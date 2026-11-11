@@ -294,6 +294,15 @@ export class CompradorComponent implements OnInit, OnDestroy {
         const user = this.auth.usuarioActual();
         if (!user || evento.pedido?.usuario_comprador_id !== user.id) return;
 
+        // Actualización in-place inmediata para reflejar el nuevo estado sin demora de red
+        this.misPedidos.update((actuales) => {
+          const existe = actuales.some((p) => p.id === evento.pedido.id);
+          if (existe) {
+            return actuales.map((p) => (p.id === evento.pedido.id ? { ...p, ...evento.pedido } : p));
+          }
+          return [evento.pedido, ...actuales];
+        });
+
         this.cargarMisPedidos();
 
         if (evento.accion !== 'CREADO' && evento.accion !== 'PAGO_CONFIRMADO') {
