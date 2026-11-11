@@ -56,13 +56,24 @@ export class VendedorComponent implements OnInit {
   pedidosRecibidos = signal<Pedido[]>([]);
   mensajesEntrantes = signal<Mensaje[]>([]);
 
+  // Sub-pestañas de Órdenes: Pendientes vs Terminados
+  filtroPedidosTienda = signal<'PENDIENTES' | 'TERMINADOS'>('PENDIENTES');
+  pedidosPendientesTienda = computed(() =>
+    this.pedidosRecibidos().filter((p) => p.estado !== 'COMPLETADO' && p.estado !== 'REEMBOLSADO'),
+  );
+  pedidosTerminadosTienda = computed(() =>
+    this.pedidosRecibidos().filter((p) => p.estado === 'COMPLETADO' || p.estado === 'REEMBOLSADO'),
+  );
+
   // Bandeja de Chats Agrupada por Comprador + Repuesto
   conversacionActivaKey = signal<string | null>(null);
   textoRespuestaTienda = signal<string>('');
   enviandoMensajeTienda = signal<boolean>(false);
+  mensajesVistosTiendaIds = signal<Set<string>>(new Set());
 
   conversacionesTienda = computed<ConversacionTiendaGrupo[]>(() => {
     const lista = this.mensajesEntrantes();
+    const vistos = this.mensajesVistosTiendaIds();
     const mapa = new Map<string, ConversacionTiendaGrupo>();
 
     for (const msg of lista) {
@@ -72,6 +83,7 @@ export class VendedorComponent implements OnInit {
         msg.usuario?.nombre_completo ||
         (msg.remitente_tipo === 'COMPRADOR' ? msg.remitente_nombre : '') ||
         'Comprador TuAuto';
+      const noVisto = msg.remitente_tipo === 'COMPRADOR' && (!msg.id || !vistos.has(msg.id));
 
       if (!existente) {
         mapa.set(key, {
@@ -84,14 +96,14 @@ export class VendedorComponent implements OnInit {
           repuestoOem: msg.repuesto?.numero_oem || msg.repuesto?.sku || null,
           ultimoMensaje: msg.texto,
           ultimaFecha: msg.creado_en || new Date().toISOString(),
-          pendienteRespuesta: msg.remitente_tipo === 'COMPRADOR',
+          pendienteRespuesta: noVisto,
           mensajes: [msg],
         });
       } else {
         existente.mensajes.push(msg);
         existente.ultimoMensaje = msg.texto;
         existente.ultimaFecha = msg.creado_en || new Date().toISOString();
-        existente.pendienteRespuesta = msg.remitente_tipo === 'COMPRADOR';
+        existente.pendienteRespuesta = noVisto;
         if (msg.usuario?.nombre_completo) {
           existente.compradorNombre = msg.usuario.nombre_completo;
         } else if (msg.remitente_tipo === 'COMPRADOR' && msg.remitente_nombre) {
@@ -302,6 +314,7 @@ export class VendedorComponent implements OnInit {
             );
           } else {
             this.conversacionActivaKey.set(key);
+            this.marcarMensajesTiendaComoVistos([msg]);
           }
         }
       });
@@ -359,6 +372,7 @@ export class VendedorComponent implements OnInit {
         this.cargarPedidosTienda(tiendaId);
         break;
       case 'mensajes':
+        this.marcarMensajesTiendaComoVistos(this.mensajesEntrantes());
         this.cargarMensajesTienda(tiendaId);
         break;
       case 'servicios':
@@ -424,13 +438,55 @@ export class VendedorComponent implements OnInit {
 
   cargarPedidosTienda(tiendaId: string) {
     this.pedidosService.findAll().subscribe((todos) => {
-      this.pedidosRecibidos.set(todos.filter((p) => p.tienda_id === tiendaId));
+      const lista = (todos || []).filter((p) => p.tienda_id === tiendaId);
+      this.pedidosRecibidos.set(lista);
+      const pendientes = lista.filter(
+        (p) => p.estado !== 'COMPLETADO' && p.estado !== 'REEMBOLSADO',
+      );
+      const terminados = lista.filter(
+        (p) => p.estado === 'COMPLETADO' || p.estado === 'REEMBOLSADO',
+      );
+      if (pendientes.length === 0 && terminados.length > 0) {
+        this.filtroPedidosTienda.set('TERMINADOS');
+      } else if (pendientes.length > 0 && terminados.length === 0) {
+        this.filtroPedidosTienda.set('PENDIENTES');
+      }
     });
   }
 
+  private cargarVistosTienda(tiendaId: string) {
+    try {
+      const raw = localStorage.getItem(`tuauto_msg_vistos_tienda_${tiendaId}`);
+      if (raw) {
+        this.mensajesVistosTiendaIds.set(new Set<string>(JSON.parse(raw)));
+      }
+    } catch {}
+  }
+
+  private marcarMensajesTiendaComoVistos(mensajes: Mensaje[]) {
+    const t = this.tienda();
+    if (!t || !mensajes || mensajes.length === 0) return;
+    try {
+      const next = new Set<string>(this.mensajesVistosTiendaIds());
+      for (const m of mensajes) {
+        if (m.id) next.add(m.id);
+      }
+      this.mensajesVistosTiendaIds.set(next);
+      localStorage.setItem(`tuauto_msg_vistos_tienda_${t.id}`, JSON.stringify(Array.from(next)));
+    } catch {}
+  }
+
   cargarMensajesTienda(tiendaId: string) {
+    this.cargarVistosTienda(tiendaId);
     this.mensajesService.obtenerConversacionesTienda(tiendaId).subscribe((m: Mensaje[]) => {
-      this.mensajesEntrantes.set(m);
+      const lista = m || [];
+      if (localStorage.getItem(`tuauto_msg_vistos_tienda_${tiendaId}`) === null) {
+        this.marcarMensajesTiendaComoVistos(lista);
+      }
+      this.mensajesEntrantes.set(lista);
+      if (this.tabActiva() === 'mensajes') {
+        this.marcarMensajesTiendaComoVistos(lista);
+      }
     });
   }
 
@@ -463,6 +519,7 @@ export class VendedorComponent implements OnInit {
 
   seleccionarConversacionTienda(grupo: ConversacionTiendaGrupo) {
     this.conversacionActivaKey.set(grupo.key);
+    this.marcarMensajesTiendaComoVistos(grupo.mensajes);
   }
 
   enviarRespuestaTextoTienda() {

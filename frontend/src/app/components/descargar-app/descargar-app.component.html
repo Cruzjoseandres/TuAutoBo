@@ -38,25 +38,74 @@
         La red automotriz de Santa Cruz de la Sierra en tu bolsillo: cotizaciones de repuestos, GPS en vivo y pagos seguros con custodia Escrow.
       </p>
 
-      <!-- Botón de Descarga Primario -->
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
-        <a 
-          [href]="urlApk"
-          target="_blank"
-          download
-          class="w-full sm:w-auto inline-flex items-center justify-center space-x-3 px-8 py-4 rounded-2xl bg-[#0071E3] hover:bg-[#0077ED] text-white font-semibold shadow-lg shadow-[#0071E3]/25 active:scale-[0.98] transition-transform text-base">
-          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9992.4482.9992.9993s-.4482.9997-.9992.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993s-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.4128 13.8563 8.125 12 8.125s-3.5902.2878-5.1368.8247L4.8409 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.152.5676l1.9972 3.4592C2.6889 11.1867.3438 14.6589 0 18.75h24c-.3438-4.0911-2.6889-7.5633-6.1185-9.4286"/>
-          </svg>
-          <span>Descargar APK (Android)</span>
-        </a>
+      <!-- Botón de Descarga Primario con Streaming Local (Evita bloqueo en 4.44/4.44 MB) -->
+      <div class="flex flex-col items-center justify-center gap-4 max-w-lg mx-auto">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+          <button
+            type="button"
+            (click)="descargar()"
+            [disabled]="versionService.descargandoApk()"
+            class="w-full sm:w-auto inline-flex items-center justify-center space-x-3 px-8 py-4 rounded-2xl bg-[#0071E3] hover:bg-[#0077ED] disabled:opacity-70 text-white font-semibold shadow-lg shadow-[#0071E3]/25 active:scale-[0.98] transition-transform text-base">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9992.4482.9992.9993s-.4482.9997-.9992.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993s-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.4128 13.8563 8.125 12 8.125s-3.5902.2878-5.1368.8247L4.8409 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.152.5676l1.9972 3.4592C2.6889 11.1867.3438 14.6589 0 18.75h24c-.3438-4.0911-2.6889-7.5633-6.1185-9.4286"/>
+            </svg>
+            <span>
+              @if (versionService.descargandoApk()) {
+                Descargando {{ versionService.mbDescargados() }} / {{ versionService.mbTotales() }} MB ({{ versionService.progresoDescarga() }}%)
+              } @else {
+                Descargar APK v{{ versionService.VERSION_ACTUAL }} (Android)
+              }
+            </span>
+          </button>
 
-        <button 
-          type="button"
-          (click)="volver()"
-          class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-4 rounded-2xl bg-black/[0.04] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 font-semibold border border-black/[0.06] dark:border-white/[0.1] active:scale-[0.98] transition-transform text-sm">
-          {{ navContext.obtenerEtiquetaDestinoAnterior('Continuar en Navegador') }}
-        </button>
+          <button 
+            type="button"
+            (click)="volver()"
+            class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-4 rounded-2xl bg-black/[0.04] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] text-neutral-800 dark:text-neutral-200 font-semibold border border-black/[0.06] dark:border-white/[0.1] active:scale-[0.98] transition-transform text-sm">
+            {{ navContext.obtenerEtiquetaDestinoAnterior('Continuar en Navegador') }}
+          </button>
+        </div>
+
+        <!-- Barra de progreso en vivo cuando está descargando -->
+        @if (versionService.descargandoApk()) {
+          <div class="w-full max-w-md space-y-1.5">
+            <div class="w-full h-2.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+              <div
+                class="h-full bg-[#0071E3] transition-all duration-150 rounded-full"
+                [style.width.%]="versionService.progresoDescarga()">
+              </div>
+            </div>
+            <p class="text-xs text-neutral-600 dark:text-neutral-300">
+              Preparando paquete en memoria ({{ versionService.mbDescargados() }} / {{ versionService.mbTotales() }} MB)...
+            </p>
+          </div>
+        }
+
+        @if (versionService.descargaCompletada()) {
+          <div class="w-full max-w-md p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-left space-y-1">
+            <p class="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+              ✅ ¡Archivo TuAuto-v{{ versionService.VERSION_ACTUAL }}.apk listo!
+            </p>
+            <p class="text-[11px] text-neutral-700 dark:text-neutral-300 leading-relaxed">
+              Si tu navegador muestra abajo el aviso <strong>«¿Quieres descargar TuAuto-v{{ versionService.VERSION_ACTUAL }}.apk de todos modos?»</strong>, presiona <strong>«Descargar de todos modos / Conservar»</strong> para guardarlo e instalarlo.
+            </p>
+          </div>
+        }
+
+        <!-- Enlaces alternativos en la misma pestaña (sin target="_blank" para que Chrome/Brave no cierre el aviso de confirmación) -->
+        <div class="flex flex-wrap items-center justify-center gap-3 text-xs pt-1">
+          <a
+            [href]="urlApkDirecto"
+            class="text-[#0071E3] dark:text-[#38BDF8] font-semibold hover:underline">
+            ⬇ Descarga Directa Servidor (Sin redirección)
+          </a>
+          <span class="text-neutral-400">•</span>
+          <a
+            [href]="urlApkGithub"
+            class="text-neutral-600 dark:text-neutral-400 font-semibold hover:underline">
+            ⬇ Enlace Alternativo (GitHub Release)
+          </a>
+        </div>
       </div>
 
       <!-- Metadatos de seguridad -->

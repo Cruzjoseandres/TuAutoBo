@@ -1,5 +1,6 @@
-import { Controller, Get, Patch, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Body, Param, Res, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { ParametrosService } from './parametros.service';
 import { ActualizarParametroDto, CrearParametroDto } from './dto/actualizar-parametro.dto';
 import { Parametro } from './entities/parametro.entity';
@@ -28,10 +29,7 @@ export class ParametrosController {
     const versionDb = await this.parametrosService.obtener('APP_VERSION_ANDROID', VERSION_OFICIAL);
     const version = this.esVersionMayor(VERSION_OFICIAL, versionDb) ? VERSION_OFICIAL : versionDb;
 
-    const apkUrl = await this.parametrosService.obtener(
-      'APP_APK_URL',
-      'https://github.com/Cruzjoseandres/TuAutoBo/releases/latest/download/TuAuto.apk',
-    );
+    const apkUrl = 'https://tuautobo.onrender.com/api/parametros/descargar-apk?v=1.2.0';
     const novedades = await this.parametrosService.obtener(
       'APP_NOVEDADES_ACTUALIZACION',
       'Actualización obligatoria v1.2.0: Ubicaciones de entrega con pin exacto en Maps, bandeja de chats en vivo (Comprador y Tienda) y estados de pedidos en tiempo real con WebSockets.',
@@ -44,6 +42,43 @@ export class ParametrosController {
       obligatoria: true,
       fecha_actualizacion: new Date().toISOString(),
     };
+  }
+
+  @Get('descargar-apk')
+  @ApiOperation({ summary: 'Descargar instalador APK oficial sin redirecciones cruzadas (Público)' })
+  async descargarApk(@Res() res: Response) {
+    const VERSION_OFICIAL = '1.2.0';
+    const githubReleaseUrl =
+      'https://github.com/Cruzjoseandres/TuAutoBo/releases/download/latest/TuAuto.apk';
+
+    try {
+      const response = await fetch(githubReleaseUrl, {
+        redirect: 'follow',
+        headers: {
+          'User-Agent': 'TuAuto-Backend-Downloader/1.2.0',
+          Accept: 'application/octet-stream, application/vnd.android.package-archive, */*',
+        },
+      });
+
+      if (!response.ok) {
+        return res.redirect(githubReleaseUrl);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="TuAuto-v${VERSION_OFICIAL}.apk"`,
+      );
+      res.setHeader('Content-Length', buffer.length.toString());
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      return res.status(200).end(buffer);
+    } catch {
+      return res.redirect(githubReleaseUrl);
+    }
   }
 
   private esVersionMayor(vA: string, vB: string): boolean {

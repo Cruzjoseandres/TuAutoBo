@@ -22,8 +22,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
           </svg>
           <span>Mis Pedidos & Escrow</span>
-          @if (misPedidos().length > 0) {
-            <span class="w-4 h-4 rounded-full bg-[#0071E3] text-white text-[10px] font-bold flex items-center justify-center">{{ misPedidos().length }}</span>
+          @if (pedidosPendientes().length > 0) {
+            <span class="w-4 h-4 rounded-full bg-[#0071E3] text-white text-[10px] font-bold flex items-center justify-center">{{ pedidosPendientes().length }}</span>
           }
         </a>
 
@@ -38,10 +38,6 @@
           @if (mensajesNoLeidosCount() > 0) {
             <span class="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
               {{ mensajesNoLeidosCount() }}
-            </span>
-          } @else if (conversacionesAgrupadas().length > 0) {
-            <span class="w-4 h-4 rounded-full bg-[#0071E3] text-white text-[10px] font-bold flex items-center justify-center">
-              {{ conversacionesAgrupadas().length }}
             </span>
           }
         </a>
@@ -306,167 +302,300 @@
   <!-- SECCIÓN 2: MIS PEDIDOS -->
   @if (seccionActiva() === 'pedidos') {
     <div class="space-y-4">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 class="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">Mis Compras & Custodia Escrow</h2>
           <p class="text-xs text-neutral-500 dark:text-neutral-400">Tus fondos están retenidos en garantía en TuAuto hasta que recibas y valides físicamente el repuesto.</p>
         </div>
-        <button (click)="cargarMisPedidos()" class="text-xs text-[#0071E3] font-semibold hover:underline">
-          Actualizar estado
-        </button>
+
+        <div class="flex items-center gap-3">
+          <!-- Selector de Pendientes vs Terminados -->
+          <div class="inline-flex p-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
+            <button
+              type="button"
+              (click)="filtroEstadoPedidos.set('PENDIENTES')"
+              [ngClass]="filtroEstadoPedidos() === 'PENDIENTES' ? 'bg-white dark:bg-[#2C2C2E] text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400'"
+              class="active:scale-[0.98] transition-all px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5">
+              <span>Pendientes</span>
+              <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold"
+                [ngClass]="filtroEstadoPedidos() === 'PENDIENTES' ? 'bg-[#0071E3] text-white' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'">
+                {{ pedidosPendientes().length }}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              (click)="filtroEstadoPedidos.set('TERMINADOS')"
+              [ngClass]="filtroEstadoPedidos() === 'TERMINADOS' ? 'bg-white dark:bg-[#2C2C2E] text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400'"
+              class="active:scale-[0.98] transition-all px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5">
+              <span>Terminados</span>
+              <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold"
+                [ngClass]="filtroEstadoPedidos() === 'TERMINADOS' ? 'bg-emerald-600 text-white' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'">
+                {{ pedidosTerminados().length }}
+              </span>
+            </button>
+          </div>
+
+          <button (click)="cargarMisPedidos()" class="text-xs text-[#0071E3] font-semibold hover:underline">
+            Actualizar estado
+          </button>
+        </div>
       </div>
 
-      @if (misPedidos().length === 0) {
-        <div class="apple-card rounded-3xl p-12 text-center text-xs text-neutral-500 dark:text-neutral-400 space-y-2">
-          <p>No tienes compras activas registradas con tu cuenta.</p>
-        </div>
-      } @else {
-        @for (ped of misPedidos(); track ped.id) {
-          <div class="apple-card rounded-3xl p-5 space-y-4">
-            <!-- Header Orden & Modalidad -->
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-black/[0.04] dark:border-white/[0.06] pb-3">
-              <div class="flex items-center space-x-2">
-                <span class="text-xs font-bold font-mono text-neutral-900 dark:text-white">{{ ped.numero_orden }}</span>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
-                  [class.bg-blue-500/10]="ped.tipo_entrega === 'DELIVERY_MOTO'"
-                  [class.text-[#0071E3]]="ped.tipo_entrega === 'DELIVERY_MOTO'"
-                  [class.bg-purple-500/10]="ped.tipo_entrega === 'RETIRO_TIENDA'"
-                  [class.text-purple-600]="ped.tipo_entrega === 'RETIRO_TIENDA'">
-                  {{ ped.tipo_entrega === 'DELIVERY_MOTO' ? 'Envío Express a Domicilio' : 'Retiro en Tienda' }}
-                </span>
-              </div>
-
-              <!-- Estado badge -->
-              @if (ped.estado === 'EN_PREPARACION') {
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
-                  🟡 Tienda preparando tu repuesto
-                </span>
-              } @else if (ped.estado === 'EN_CAMINO_A_TIENDA') {
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/10 text-[#0071E3] border border-blue-500/20 animate-pulse">
-                  🚗 Repartidor de ida a la tienda
-                </span>
-              } @else if (ped.estado === 'EN_TIENDA') {
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                  📍 Repartidor en la tienda cargando el paquete
-                </span>
-              } @else if (ped.estado === 'EN_CAMINO_A_DESTINO' || ped.estado === 'EN_CAMINO') {
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 animate-pulse">
-                  🚀 Repartidor de camino a tu ubicación
-                </span>
-              } @else if (ped.estado === 'EN_DESTINO') {
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 animate-bounce">
-                  🎯 ¡Repartidor ha llegado a tu puerta!
-                </span>
-              } @else if (ped.estado === 'LISTO_RETIRO') {
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/10 text-purple-600 border border-purple-500/20">
-                  🏪 Listo para recoger en mostrador
-                </span>
-              } @else if (ped.estado === 'COMPLETADO') {
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                  ✅ Pedido Completado
-                </span>
-              } @else {
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
-                  {{ ped.estado }}
-                </span>
-              }
-            </div>
-
-            <!-- Timeline Visual de Seguimiento Dinámico -->
-            <div class="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.06] space-y-2">
-              <span class="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider block">Progreso en Vivo del Pedido</span>
-              
-              @if (ped.tipo_entrega === 'DELIVERY_MOTO') {
-                <!-- Flujo con Repartidor (4 Pasos) -->
-                <div class="grid grid-cols-4 gap-1 text-center text-[10px]">
-                  <div class="space-y-1">
-                    <div class="h-1.5 rounded-full bg-emerald-500"></div>
-                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">1. Pagado</span>
-                  </div>
-                  <div class="space-y-1">
-                    <div class="h-1.5 rounded-full"
-                      [class.bg-emerald-500]="ped.estado !== 'PAGADO_ESCROW' && ped.estado !== 'PENDIENTE_PAGO'"
-                      [class.bg-neutral-200]="ped.estado === 'PAGADO_ESCROW' || ped.estado === 'PENDIENTE_PAGO'"></div>
-                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">2. Preparando</span>
-                  </div>
-                  <div class="space-y-1">
-                    <div class="h-1.5 rounded-full"
-                      [class.bg-emerald-500]="ped.estado === 'EN_CAMINO_A_DESTINO' || ped.estado === 'EN_DESTINO' || ped.estado === 'COMPLETADO' || ped.estado === 'EN_CAMINO'"
-                      [class.bg-blue-500]="ped.estado === 'EN_CAMINO_A_TIENDA' || ped.estado === 'EN_TIENDA'"
-                      [class.bg-neutral-200]="ped.estado === 'EN_PREPARACION' || ped.estado === 'PAGADO_ESCROW'"></div>
-                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">3. De Camino</span>
-                  </div>
-                  <div class="space-y-1">
-                    <div class="h-1.5 rounded-full"
-                      [class.bg-emerald-500]="ped.estado === 'COMPLETADO'"
-                      [class.bg-amber-500]="ped.estado === 'EN_DESTINO'"
-                      [class.bg-neutral-200]="ped.estado !== 'EN_DESTINO' && ped.estado !== 'COMPLETADO'"></div>
-                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">4. Entregado</span>
-                  </div>
-                </div>
-              } @else {
-                <!-- Flujo Retiro en Tienda (3 Pasos) -->
-                <div class="grid grid-cols-3 gap-1 text-center text-[10px]">
-                  <div class="space-y-1">
-                    <div class="h-1.5 rounded-full bg-emerald-500"></div>
-                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">1. Pago Escrow</span>
-                  </div>
-                  <div class="space-y-1">
-                    <div class="h-1.5 rounded-full"
-                      [class.bg-emerald-500]="ped.estado === 'LISTO_RETIRO' || ped.estado === 'COMPLETADO'"
-                      [class.bg-amber-500]="ped.estado === 'EN_PREPARACION'"
-                      [class.bg-neutral-200]="ped.estado === 'PAGADO_ESCROW'"></div>
-                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">2. Alistando en Local</span>
-                  </div>
-                  <div class="space-y-1">
-                    <div class="h-1.5 rounded-full"
-                      [class.bg-emerald-500]="ped.estado === 'COMPLETADO'"
-                      [class.bg-purple-500]="ped.estado === 'LISTO_RETIRO'"
-                      [class.bg-neutral-200]="ped.estado !== 'LISTO_RETIRO' && ped.estado !== 'COMPLETADO'"></div>
-                    <span class="text-neutral-600 dark:text-neutral-300 font-semibold">3. Retirado en Mostrador</span>
-                  </div>
-                </div>
-              }
-
-              <!-- Explicación en lenguaje natural según estado actual -->
-              <p class="text-xs text-neutral-600 dark:text-neutral-300 pt-1">
-                @if (ped.estado === 'EN_PREPARACION') {
-                  La tienda <strong>{{ ped.tienda?.nombre }}</strong> está alistando tu repuesto en este momento.
-                } @else if (ped.estado === 'EN_CAMINO_A_TIENDA') {
-                  Un repartidor ya aceptó la carrera y se encuentra en camino al local para retirar tu pieza.
-                } @else if (ped.estado === 'EN_TIENDA') {
-                  El repartidor está en el mostrador de la repuestera verificando el repuesto antes de salir.
-                } @else if (ped.estado === 'EN_CAMINO_A_DESTINO' || ped.estado === 'EN_CAMINO') {
-                  ¡Repuesto en viaje! El repartidor se dirige hacia <strong>{{ ped.direccion_escrita || 'tu ubicación' }}</strong>.
-                } @else if (ped.estado === 'EN_DESTINO') {
-                  <span class="text-emerald-600 dark:text-emerald-400 font-bold">¡El repartidor está en tu puerta! Dicta tu PIN para recibir la pieza.</span>
-                } @else if (ped.estado === 'LISTO_RETIRO') {
-                  <span class="text-purple-600 dark:text-purple-400 font-bold">¡Tu repuesto está listo para recoger en {{ ped.tienda?.nombre }}! Presenta tu PIN en mostrador.</span>
-                } @else if (ped.estado === 'COMPLETADO') {
-                  Pieza entregada y validada con PIN. ¡Gracias por confiar en TuAuto!
-                }
-              </p>
-            </div>
-
-            <!-- Ficha del Repuesto y PIN de Seguridad -->
-            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
-              <div class="flex items-center space-x-3">
-                <img [src]="ped.repuesto?.url_imagen" class="w-14 h-14 rounded-xl object-cover bg-neutral-100 dark:bg-neutral-800 flex-shrink-0" />
-                <div class="space-y-0.5">
-                  <h4 class="text-xs font-bold text-neutral-900 dark:text-white">{{ ped.repuesto?.titulo }}</h4>
-                  <p class="text-[11px] text-neutral-600 dark:text-neutral-300">Tienda: {{ ped.tienda?.nombre }}</p>
-                  <p class="text-xs font-bold text-neutral-900 dark:text-white">Total Pagado: Bs {{ ped.total_bs.toFixed(2) }}</p>
-                </div>
-              </div>
-
-              <!-- Caja Destacada del PIN de Entrega -->
-              <div class="p-3.5 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 text-center min-w-[140px] flex-shrink-0">
-                <span class="text-[9px] text-blue-600 dark:text-blue-400 uppercase font-bold tracking-wider block">Tu PIN de Seguridad</span>
-                <span class="text-2xl font-black text-[#0071E3] tracking-[0.25em] font-mono block my-0.5">{{ ped.pin_entrega }}</span>
-                <span class="text-[9px] text-neutral-600 dark:text-neutral-300 block leading-tight">Dicta este código solo al recibir el repuesto</span>
-              </div>
-            </div>
+      <!-- SUB-VISTA A: PEDIDOS PENDIENTES / EN CURSO -->
+      @if (filtroEstadoPedidos() === 'PENDIENTES') {
+        @if (pedidosPendientes().length === 0) {
+          <div class="apple-card rounded-3xl p-10 text-center space-y-3">
+            <p class="text-sm font-bold text-neutral-900 dark:text-white">No tienes pedidos pendientes en curso</p>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              Todas tus órdenes han sido entregadas o aún no tienes compras en tránsito.
+            </p>
+            @if (pedidosTerminados().length > 0) {
+              <button
+                type="button"
+                (click)="filtroEstadoPedidos.set('TERMINADOS')"
+                class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-xs font-semibold text-neutral-900 dark:text-white transition-colors">
+                <span>Ver Pedidos Terminados ({{ pedidosTerminados().length }}) →</span>
+              </button>
+            }
           </div>
+        } @else {
+          @for (ped of pedidosPendientes(); track ped.id) {
+            <div class="apple-card rounded-3xl p-5 space-y-4">
+              <!-- Header Orden & Modalidad -->
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-black/[0.04] dark:border-white/[0.06] pb-3">
+                <div class="flex items-center space-x-2">
+                  <span class="text-xs font-bold font-mono text-neutral-900 dark:text-white">{{ ped.numero_orden }}</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
+                    [class.bg-blue-500/10]="ped.tipo_entrega === 'DELIVERY_MOTO'"
+                    [class.text-[#0071E3]]="ped.tipo_entrega === 'DELIVERY_MOTO'"
+                    [class.bg-purple-500/10]="ped.tipo_entrega === 'RETIRO_TIENDA'"
+                    [class.text-purple-600]="ped.tipo_entrega === 'RETIRO_TIENDA'">
+                    {{ ped.tipo_entrega === 'DELIVERY_MOTO' ? 'Envío Express a Domicilio' : 'Retiro en Tienda' }}
+                  </span>
+                </div>
+
+                <!-- Estado badge -->
+                @if (ped.estado === 'EN_PREPARACION') {
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                    🟡 Tienda preparando tu repuesto
+                  </span>
+                } @else if (ped.estado === 'EN_CAMINO_A_TIENDA') {
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/10 text-[#0071E3] border border-blue-500/20 animate-pulse">
+                    🚗 Repartidor de ida a la tienda
+                  </span>
+                } @else if (ped.estado === 'EN_TIENDA') {
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                    📍 Repartidor en la tienda cargando el paquete
+                  </span>
+                } @else if (ped.estado === 'EN_CAMINO_A_DESTINO' || ped.estado === 'EN_CAMINO') {
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 animate-pulse">
+                    🚀 Repartidor de camino a tu ubicación
+                  </span>
+                } @else if (ped.estado === 'EN_DESTINO') {
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 animate-bounce">
+                    🎯 ¡Repartidor ha llegado a tu puerta!
+                  </span>
+                } @else if (ped.estado === 'LISTO_RETIRO') {
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/10 text-purple-600 border border-purple-500/20">
+                    🏪 Listo para recoger en mostrador
+                  </span>
+                } @else {
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+                    {{ ped.estado }}
+                  </span>
+                }
+              </div>
+
+              <!-- Timeline Visual de Seguimiento Dinámico (Solo en pedidos pendientes) -->
+              <div class="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.06] space-y-2">
+                <span class="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider block">Progreso en Vivo del Pedido</span>
+                
+                @if (ped.tipo_entrega === 'DELIVERY_MOTO') {
+                  <!-- Flujo con Repartidor (4 Pasos) -->
+                  <div class="grid grid-cols-4 gap-1 text-center text-[10px]">
+                    <div class="space-y-1">
+                      <div class="h-1.5 rounded-full bg-emerald-500"></div>
+                      <span class="text-neutral-600 dark:text-neutral-300 font-semibold">1. Pagado</span>
+                    </div>
+                    <div class="space-y-1">
+                      <div class="h-1.5 rounded-full"
+                        [class.bg-emerald-500]="ped.estado !== 'PAGADO_ESCROW' && ped.estado !== 'PENDIENTE_PAGO'"
+                        [class.bg-neutral-200]="ped.estado === 'PAGADO_ESCROW' || ped.estado === 'PENDIENTE_PAGO'"></div>
+                      <span class="text-neutral-600 dark:text-neutral-300 font-semibold">2. Preparando</span>
+                    </div>
+                    <div class="space-y-1">
+                      <div class="h-1.5 rounded-full"
+                        [class.bg-emerald-500]="ped.estado === 'EN_CAMINO_A_DESTINO' || ped.estado === 'EN_DESTINO' || ped.estado === 'COMPLETADO' || ped.estado === 'EN_CAMINO'"
+                        [class.bg-blue-500]="ped.estado === 'EN_CAMINO_A_TIENDA' || ped.estado === 'EN_TIENDA'"
+                        [class.bg-neutral-200]="ped.estado === 'EN_PREPARACION' || ped.estado === 'PAGADO_ESCROW'"></div>
+                      <span class="text-neutral-600 dark:text-neutral-300 font-semibold">3. De Camino</span>
+                    </div>
+                    <div class="space-y-1">
+                      <div class="h-1.5 rounded-full"
+                        [class.bg-emerald-500]="ped.estado === 'COMPLETADO'"
+                        [class.bg-amber-500]="ped.estado === 'EN_DESTINO'"
+                        [class.bg-neutral-200]="ped.estado !== 'EN_DESTINO' && ped.estado !== 'COMPLETADO'"></div>
+                      <span class="text-neutral-600 dark:text-neutral-300 font-semibold">4. Entregado</span>
+                    </div>
+                  </div>
+                } @else {
+                  <!-- Flujo Retiro en Tienda (3 Pasos) -->
+                  <div class="grid grid-cols-3 gap-1 text-center text-[10px]">
+                    <div class="space-y-1">
+                      <div class="h-1.5 rounded-full bg-emerald-500"></div>
+                      <span class="text-neutral-600 dark:text-neutral-300 font-semibold">1. Pago Escrow</span>
+                    </div>
+                    <div class="space-y-1">
+                      <div class="h-1.5 rounded-full"
+                        [class.bg-emerald-500]="ped.estado === 'LISTO_RETIRO' || ped.estado === 'COMPLETADO'"
+                        [class.bg-amber-500]="ped.estado === 'EN_PREPARACION'"
+                        [class.bg-neutral-200]="ped.estado === 'PAGADO_ESCROW'"></div>
+                      <span class="text-neutral-600 dark:text-neutral-300 font-semibold">2. Alistando en Local</span>
+                    </div>
+                    <div class="space-y-1">
+                      <div class="h-1.5 rounded-full"
+                        [class.bg-emerald-500]="ped.estado === 'COMPLETADO'"
+                        [class.bg-purple-500]="ped.estado === 'LISTO_RETIRO'"
+                        [class.bg-neutral-200]="ped.estado !== 'LISTO_RETIRO' && ped.estado !== 'COMPLETADO'"></div>
+                      <span class="text-neutral-600 dark:text-neutral-300 font-semibold">3. Retirado en Mostrador</span>
+                    </div>
+                  </div>
+                }
+
+                <!-- Explicación en lenguaje natural según estado actual -->
+                <p class="text-xs text-neutral-600 dark:text-neutral-300 pt-1">
+                  @if (ped.estado === 'EN_PREPARACION') {
+                    La tienda <strong>{{ ped.tienda?.nombre }}</strong> está alistando tu repuesto en este momento.
+                  } @else if (ped.estado === 'EN_CAMINO_A_TIENDA') {
+                    Un repartidor ya aceptó la carrera y se encuentra en camino al local para retirar tu pieza.
+                  } @else if (ped.estado === 'EN_TIENDA') {
+                    El repartidor está en el mostrador de la repuestera verificando el repuesto antes de salir.
+                  } @else if (ped.estado === 'EN_CAMINO_A_DESTINO' || ped.estado === 'EN_CAMINO') {
+                    ¡Repuesto en viaje! El repartidor se dirige hacia <strong>{{ ped.direccion_escrita || 'tu ubicación' }}</strong>.
+                  } @else if (ped.estado === 'EN_DESTINO') {
+                    <span class="text-emerald-600 dark:text-emerald-400 font-bold">¡El repartidor está en tu puerta! Dicta tu PIN para recibir la pieza.</span>
+                  } @else if (ped.estado === 'LISTO_RETIRO') {
+                    <span class="text-purple-600 dark:text-purple-400 font-bold">¡Tu repuesto está listo para recoger en {{ ped.tienda?.nombre }}! Presenta tu PIN en mostrador.</span>
+                  }
+                </p>
+              </div>
+
+              <!-- Ficha del Repuesto y PIN de Seguridad -->
+              <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                  <img [src]="ped.repuesto?.url_imagen" class="w-14 h-14 rounded-xl object-cover bg-neutral-100 dark:bg-neutral-800 flex-shrink-0" />
+                  <div class="space-y-0.5">
+                    <h4 class="text-xs font-bold text-neutral-900 dark:text-white">{{ ped.repuesto?.titulo }}</h4>
+                    <p class="text-[11px] text-neutral-600 dark:text-neutral-300">Tienda: {{ ped.tienda?.nombre }} • Cantidad: {{ ped.cantidad || 1 }} unid.</p>
+                    <p class="text-xs font-bold text-neutral-900 dark:text-white">Total Pagado: Bs {{ ped.total_bs.toFixed(2) }}</p>
+                  </div>
+                </div>
+
+                <!-- Caja Destacada del PIN de Entrega -->
+                <div class="p-3.5 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 text-center min-w-[140px] flex-shrink-0">
+                  <span class="text-[9px] text-blue-600 dark:text-blue-400 uppercase font-bold tracking-wider block">Tu PIN de Seguridad</span>
+                  <span class="text-2xl font-black text-[#0071E3] tracking-[0.25em] font-mono block my-0.5">{{ ped.pin_entrega }}</span>
+                  <span class="text-[9px] text-neutral-600 dark:text-neutral-300 block leading-tight">Dicta este código solo al recibir el repuesto</span>
+                </div>
+              </div>
+            </div>
+          }
+        }
+      }
+
+      <!-- SUB-VISTA B: PEDIDOS TERMINADOS (Solo información del producto, precio pagado y estado final Terminado, sin barra en vivo ni PIN) -->
+      @if (filtroEstadoPedidos() === 'TERMINADOS') {
+        @if (pedidosTerminados().length === 0) {
+          <div class="apple-card rounded-3xl p-10 text-center space-y-2">
+            <p class="text-sm font-bold text-neutral-900 dark:text-white">Aún no tienes pedidos terminados</p>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              Cuando tus pedidos sean entregados y validados aparecerán en este historial.
+            </p>
+          </div>
+        } @else {
+          @for (ped of pedidosTerminados(); track ped.id) {
+            <div class="apple-card rounded-3xl p-5 space-y-4">
+              <!-- Header Orden, Modalidad y Fecha -->
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-black/[0.04] dark:border-white/[0.06] pb-3">
+                <div class="flex items-center space-x-2">
+                  <span class="text-xs font-bold font-mono text-neutral-900 dark:text-white">{{ ped.numero_orden }}</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
+                    [class.bg-blue-500/10]="ped.tipo_entrega === 'DELIVERY_MOTO'"
+                    [class.text-[#0071E3]]="ped.tipo_entrega === 'DELIVERY_MOTO'"
+                    [class.bg-purple-500/10]="ped.tipo_entrega === 'RETIRO_TIENDA'"
+                    [class.text-purple-600]="ped.tipo_entrega === 'RETIRO_TIENDA'">
+                    {{ ped.tipo_entrega === 'DELIVERY_MOTO' ? 'Envío Express a Domicilio' : 'Retiro en Tienda' }}
+                  </span>
+                </div>
+                <span class="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
+                  {{ ped.creado_en | date:'dd/MM/yyyy, h:mm a' }}
+                </span>
+              </div>
+
+              <!-- Información del Producto y Desglose del Precio Pagado (Sin barra de progreso ni PIN) -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-start space-x-3.5">
+                  <img
+                    [src]="ped.repuesto?.url_imagen"
+                    class="w-16 h-16 rounded-2xl object-cover bg-neutral-100 dark:bg-neutral-800 flex-shrink-0 border border-black/[0.04] dark:border-white/[0.08]"
+                  />
+                  <div class="space-y-1">
+                    <h4 class="text-sm font-bold text-neutral-900 dark:text-white">{{ ped.repuesto?.titulo }}</h4>
+                    <p class="text-xs text-neutral-600 dark:text-neutral-300">
+                      Tienda: <strong class="text-neutral-900 dark:text-white">{{ ped.tienda?.nombre }}</strong>
+                      • Cantidad: <strong class="text-neutral-900 dark:text-white">{{ ped.cantidad || 1 }} {{ (ped.cantidad || 1) === 1 ? 'unidad' : 'unidades' }}</strong>
+                    </p>
+                    @if (ped.repuesto?.sku || ped.repuesto?.numero_oem) {
+                      <p class="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
+                        SKU: {{ ped.repuesto?.sku }}
+                        @if (ped.repuesto?.numero_oem) {
+                          <span>• OEM: {{ ped.repuesto?.numero_oem }}</span>
+                        }
+                      </p>
+                    }
+                    @if (ped.tipo_entrega === 'DELIVERY_MOTO' && ped.direccion_escrita) {
+                      <p class="text-[11px] text-neutral-500 dark:text-neutral-400">
+                        Entregado en: {{ ped.direccion_escrita }}
+                      </p>
+                    }
+                  </div>
+                </div>
+
+                <!-- Resumen del Monto Pagado -->
+                <div class="p-3.5 rounded-2xl bg-neutral-50 dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.08] sm:text-right space-y-0.5 min-w-[190px]">
+                  <div class="text-[11px] text-neutral-500 dark:text-neutral-400">
+                    Repuesto: Bs {{ ped.subtotal_repuesto_bs.toFixed(2) }}
+                    @if (ped.tarifa_envio_bs > 0) {
+                      <span>• Envío: Bs {{ ped.tarifa_envio_bs.toFixed(2) }}</span>
+                    }
+                  </div>
+                  <div class="text-sm font-extrabold text-neutral-900 dark:text-white">
+                    Total Pagado: Bs {{ ped.total_bs.toFixed(2) }}
+                  </div>
+                  <div class="text-[10px] text-neutral-500 dark:text-neutral-400">
+                    Método: {{ ped.metodo_pago }} ({{ ped.moneda_pago }})
+                  </div>
+                </div>
+              </div>
+
+              <!-- Por último: Estado del Pedido como Terminado -->
+              <div class="pt-3 border-t border-black/[0.05] dark:border-white/[0.08] flex flex-wrap items-center justify-between gap-2">
+                <span class="text-[11px] text-neutral-500 dark:text-neutral-400">
+                  {{ ped.estado === 'REEMBOLSADO' ? 'Orden reembolsada al comprador' : 'Repuesto entregado y compra finalizada satisfactoriamente' }}
+                </span>
+                @if (ped.estado === 'REEMBOLSADO') {
+                  <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                    <span>↩ Pedido Reembolsado</span>
+                  </span>
+                } @else {
+                  <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                    <span>✅ Pedido Terminado</span>
+                  </span>
+                }
+              </div>
+            </div>
+          }
         }
       }
     </div>

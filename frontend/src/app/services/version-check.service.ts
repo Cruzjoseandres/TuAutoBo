@@ -29,6 +29,13 @@ export class VersionCheckService {
   readonly infoActualizacion = signal<InfoVersionApp | null>(null);
   readonly modalVisible = signal<boolean>(false);
 
+  // Estado de descarga directa en memoria (evita bloqueo en 4.44/4.44 MB de Chrome/Brave)
+  readonly descargandoApk = signal<boolean>(false);
+  readonly progresoDescarga = signal<number>(0);
+  readonly mbDescargados = signal<string>('0.00');
+  readonly mbTotales = signal<string>('4.44');
+  readonly descargaCompletada = signal<boolean>(false);
+
   constructor() {
     this.verificarVersion();
     if (typeof document !== 'undefined') {
@@ -88,11 +95,68 @@ export class VersionCheckService {
     }
   }
 
-  descargarInstalador(): void {
-    const url =
+  async descargarInstalador(): Promise<void> {
+    if (this.descargandoApk()) return;
+
+    const endpointBackend = `${environment.apiUrl}/parametros/descargar-apk?v=${this.infoActualizacion()?.version || '1.2.0'}&t=${Date.now()}`;
+    const fallbackUrl =
       this.infoActualizacion()?.apk_url ||
-      'https://github.com/Cruzjoseandres/TuAutoBo/releases/latest/download/TuAuto.apk';
-    window.open(url, '_system');
+      'https://github.com/Cruzjoseandres/TuAutoBo/releases/download/latest/TuAuto.apk';
+
+    // Si estamos dentro de la APK nativa, abrir en el navegador del sistema sin cerrar la pestaña
+    if (this.esAppNativa()) {
+      window.location.assign(endpointBackend);
+      return;
+    }
+
+    this.descargandoApk.set(true);
+    this.progresoDescarga.set(0);
+    this.mbDescargados.set('0.00');
+    this.descargaCompletada.set(false);
+
+    try {
+      const response = await fetch(endpointBackend);
+      if (!response.ok || !response.body) {
+        throw new Error('Fallback a descarga directa');
+      }
+
+      const contentLength = Number(response.headers.get('Content-Length')) || 4439733;
+      this.mbTotales.set((contentLength / (1024 * 1024)).toFixed(2));
+
+      const reader = response.body.getReader();
+      const chunks: Uint8Array[] = [];
+      let receivedLength = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          chunks.push(value);
+          receivedLength += value.length;
+          this.mbDescargados.set((receivedLength / (1024 * 1024)).toFixed(2));
+          this.progresoDescarga.set(Math.min(100, Math.round((receivedLength / contentLength) * 100)));
+        }
+      }
+
+      const blob = new Blob(chunks as BlobPart[], { type: 'application/vnd.android.package-archive' });
+      const blobUrl = URL.createObjectURL(blob);
+      const versionStr = this.infoActualizacion()?.version || this.VERSION_ACTUAL || '1.2.0';
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `TuAuto-v${versionStr}.apk`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      this.progresoDescarga.set(100);
+      this.descargaCompletada.set(true);
+      this.descargandoApk.set(false);
+    } catch {
+      this.descargandoApk.set(false);
+      window.location.assign(fallbackUrl);
+    }
   }
 
   private esVersionMayor(versionServidor: string, versionLocal: string): boolean {

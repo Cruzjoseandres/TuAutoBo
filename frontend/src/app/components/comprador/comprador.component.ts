@@ -90,6 +90,15 @@ export class CompradorComponent implements OnInit, OnDestroy {
   repuestos = signal<Repuesto[]>([]);
   misPedidos = signal<Pedido[]>([]);
 
+  // Sub-pestañas de Mis Pedidos: Pendientes vs Terminados
+  filtroEstadoPedidos = signal<'PENDIENTES' | 'TERMINADOS'>('PENDIENTES');
+  pedidosPendientes = computed(() =>
+    this.misPedidos().filter((p) => p.estado !== 'COMPLETADO' && p.estado !== 'REEMBOLSADO'),
+  );
+  pedidosTerminados = computed(() =>
+    this.misPedidos().filter((p) => p.estado === 'COMPLETADO' || p.estado === 'REEMBOLSADO'),
+  );
+
   // Bandeja de Mensajes Agrupada por Repuesto + Tienda
   todosLosMensajes = signal<Mensaje[]>([]);
   repuestoPreseleccionadoChat = signal<Repuesto | null>(null);
@@ -221,6 +230,7 @@ export class CompradorComponent implements OnInit, OnDestroy {
             this.cargarRepuestos();
           } else if (tab === 'mensajes') {
             this.mensajesNoLeidosCount.set(0);
+            this.marcarMensajesComoVistos(this.todosLosMensajes());
             this.cargarMisMensajes();
           }
         }
@@ -251,6 +261,48 @@ export class CompradorComponent implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
+  private obtenerStorageKeyMensajesVistos(): string {
+    const user = this.auth.usuarioActual();
+    return `tuauto_msg_vistos_comprador_${user?.id || 'anon'}`;
+  }
+
+  private obtenerIdsMensajesVistos(): Set<string> {
+    try {
+      const raw = localStorage.getItem(this.obtenerStorageKeyMensajesVistos());
+      if (raw) {
+        return new Set<string>(JSON.parse(raw));
+      }
+    } catch {}
+    return new Set<string>();
+  }
+
+  private marcarMensajesComoVistos(mensajes: Mensaje[]) {
+    if (!mensajes || mensajes.length === 0) return;
+    try {
+      const vistos = this.obtenerIdsMensajesVistos();
+      for (const m of mensajes) {
+        if (m.id) vistos.add(m.id);
+      }
+      localStorage.setItem(
+        this.obtenerStorageKeyMensajesVistos(),
+        JSON.stringify(Array.from(vistos)),
+      );
+    } catch {}
+  }
+
+  private actualizarConteoNoLeidos(mensajes: Mensaje[]) {
+    if (this.seccionActiva() === 'mensajes') {
+      this.marcarMensajesComoVistos(mensajes);
+      this.mensajesNoLeidosCount.set(0);
+      return;
+    }
+    const vistos = this.obtenerIdsMensajesVistos();
+    const noVistos = (mensajes || []).filter(
+      (m) => m.remitente_tipo === 'TIENDA' && m.id && !vistos.has(m.id),
+    );
+    this.mensajesNoLeidosCount.set(noVistos.length);
+  }
+
   private conectarSocketsEnTiempoReal() {
     // Escuchar nuevos mensajes en vivo
     this.subs.add(
@@ -269,8 +321,11 @@ export class CompradorComponent implements OnInit, OnDestroy {
         }
 
         if (msg.remitente_tipo === 'TIENDA') {
-          if (this.seccionActiva() !== 'mensajes') {
-            this.mensajesNoLeidosCount.update((n) => n + 1);
+          if (this.seccionActiva() === 'mensajes') {
+            this.marcarMensajesComoVistos([msg]);
+            this.mensajesNoLeidosCount.set(0);
+          } else {
+            this.actualizarConteoNoLeidos(this.todosLosMensajes());
             this.toast.info(
               `💬 Respuesta de ${msg.tienda?.nombre || msg.remitente_nombre}`,
               msg.texto,
@@ -302,6 +357,13 @@ export class CompradorComponent implements OnInit, OnDestroy {
           }
           return [evento.pedido, ...actuales];
         });
+
+        if (
+          evento.pedido.estado === 'COMPLETADO' &&
+          this.pedidosPendientes().length === 0
+        ) {
+          this.filtroEstadoPedidos.set('TERMINADOS');
+        }
 
         this.cargarMisPedidos();
 
@@ -351,7 +413,14 @@ export class CompradorComponent implements OnInit, OnDestroy {
     if (!user) return;
     this.mensajesService.obtenerConversacionesComprador(user.id).subscribe({
       next: (mensajes) => {
-        this.todosLosMensajes.set(mensajes || []);
+        const lista = mensajes || [];
+        // Si es la primera vez que se sincroniza en este navegador, marcar historial previo como visto
+        const storageKey = this.obtenerStorageKeyMensajesVistos();
+        if (localStorage.getItem(storageKey) === null) {
+          this.marcarMensajesComoVistos(lista);
+        }
+        this.todosLosMensajes.set(lista);
+        this.actualizarConteoNoLeidos(lista);
       },
       error: () => {},
     });
@@ -359,6 +428,8 @@ export class CompradorComponent implements OnInit, OnDestroy {
 
   seleccionarConversacion(grupo: ConversacionCompradorGrupo) {
     this.conversacionActivaKey.set(grupo.key);
+    this.marcarMensajesComoVistos(grupo.mensajes);
+    this.actualizarConteoNoLeidos(this.todosLosMensajes());
   }
 
   enviarMensajeDesdeBandeja() {
@@ -454,7 +525,21 @@ export class CompradorComponent implements OnInit, OnDestroy {
   cargarMisPedidos() {
     const user = this.auth.usuarioActual();
     if (!user) return;
-    this.pedidosService.findByUsuarioId(user.id).subscribe((d) => this.misPedidos.set(d));
+    this.pedidosService.findByUsuarioId(user.id).subscribe((d) => {
+      const lista = d || [];
+      this.misPedidos.set(lista);
+      const pendientes = lista.filter(
+        (p) => p.estado !== 'COMPLETADO' && p.estado !== 'REEMBOLSADO',
+      );
+      const terminados = lista.filter(
+        (p) => p.estado === 'COMPLETADO' || p.estado === 'REEMBOLSADO',
+      );
+      if (pendientes.length === 0 && terminados.length > 0) {
+        this.filtroEstadoPedidos.set('TERMINADOS');
+      } else if (pendientes.length > 0 && terminados.length === 0) {
+        this.filtroEstadoPedidos.set('PENDIENTES');
+      }
+    });
   }
 
   onSelectMarca(id: number) {

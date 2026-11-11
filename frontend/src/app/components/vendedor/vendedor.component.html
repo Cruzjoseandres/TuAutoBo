@@ -40,15 +40,20 @@
         <a 
           [routerLink]="['/vendedor', 'pedidos']"
           [ngClass]="tabActiva() === 'pedidos' ? 'bg-white dark:bg-[#2C2C2E] text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400'"
-          class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">
-          Órdenes ({{ pedidosRecibidos().length }})
+          class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 whitespace-nowrap">
+          <span>Órdenes</span>
+          @if (pedidosPendientesTienda().length > 0) {
+            <span class="px-1.5 py-0.5 rounded-full bg-[#0071E3] text-white text-[10px] font-bold">
+              {{ pedidosPendientesTienda().length }}
+            </span>
+          }
         </a>
 
         <a 
           [routerLink]="['/vendedor', 'mensajes']"
           [ngClass]="tabActiva() === 'mensajes' ? 'bg-white dark:bg-[#2C2C2E] text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400'"
           class="active:scale-[0.98] transition-all px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 whitespace-nowrap">
-          <span>Chats & Consultas ({{ conversacionesTienda().length }})</span>
+          <span>Chats & Consultas</span>
           @if (consultasPendientesCount() > 0) {
             <span class="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold animate-pulse">
               {{ consultasPendientesCount() }}
@@ -326,15 +331,44 @@
   <!-- PESTAÑA 2: ÓRDENES RECIBIDAS & ESCROW -->
   @if (tabActiva() === 'pedidos') {
     <div class="space-y-4">
-      <h2 class="text-base font-bold text-neutral-900 dark:text-white">Órdenes de Compra Recibidas</h2>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-base font-bold text-neutral-900 dark:text-white">Órdenes de Compra Recibidas</h2>
 
-      @if (pedidosRecibidos().length === 0) {
+        <!-- Selector Pendientes vs Terminados -->
+        <div class="inline-flex p-1 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.04] dark:border-white/[0.08]">
+          <button
+            type="button"
+            (click)="filtroPedidosTienda.set('PENDIENTES')"
+            [ngClass]="filtroPedidosTienda() === 'PENDIENTES' ? 'bg-white dark:bg-[#2C2C2E] text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400'"
+            class="active:scale-[0.98] transition-all px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5">
+            <span>Pendientes</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold"
+              [ngClass]="filtroPedidosTienda() === 'PENDIENTES' ? 'bg-[#0071E3] text-white' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'">
+              {{ pedidosPendientesTienda().length }}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            (click)="filtroPedidosTienda.set('TERMINADOS')"
+            [ngClass]="filtroPedidosTienda() === 'TERMINADOS' ? 'bg-white dark:bg-[#2C2C2E] text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400'"
+            class="active:scale-[0.98] transition-all px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5">
+            <span>Terminados</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold"
+              [ngClass]="filtroPedidosTienda() === 'TERMINADOS' ? 'bg-emerald-600 text-white' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'">
+              {{ pedidosTerminadosTienda().length }}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      @if ((filtroPedidosTienda() === 'PENDIENTES' ? pedidosPendientesTienda() : pedidosTerminadosTienda()).length === 0) {
         <div class="bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl rounded-3xl p-10 text-center text-xs text-neutral-500 dark:text-neutral-400 border border-black/[0.06] dark:border-white/[0.08]">
-          No hay órdenes pendientes en este momento.
+          {{ filtroPedidosTienda() === 'PENDIENTES' ? 'No hay órdenes pendientes en este momento.' : 'Aún no hay órdenes terminadas en el historial.' }}
         </div>
       } @else {
         <div class="space-y-3">
-          @for (ped of pedidosRecibidos(); track ped.id) {
+          @for (ped of (filtroPedidosTienda() === 'PENDIENTES' ? pedidosPendientesTienda() : pedidosTerminadosTienda()); track ped.id) {
             <div class="bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl rounded-3xl p-5 border border-black/[0.06] dark:border-white/[0.08] shadow-sm space-y-4">
               <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-black/[0.04] dark:border-white/[0.06]">
                 <div class="flex flex-wrap items-center gap-2">
